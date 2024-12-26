@@ -1,0 +1,464 @@
+<template>
+  <div class="app-container">
+    <div class="filter-container">
+      <el-select v-model="listQuery.brandId" class="filter-item" clearable placeholder="品牌" style="width: 160px;" @change="changeSeries" @keyup.enter.native="handleFilter"
+                 @clear="handleClear" >
+        <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value"/>
+      </el-select>
+      <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">搜索</el-button>
+    </div>
+    <el-badge :value="cartCount" class="cart-icon">
+      <el-button type="primary" icon="el-icon-shopping-cart" @click="openCart">
+        购物车
+      </el-button>
+    </el-badge>
+
+    <el-table
+      v-loading="listLoading"
+      :key="tableKey"
+      :data="list"
+      fit
+      highlight-current-row
+      style="width: 100%;"
+      @sort-change="sortChange">
+      <el-table-column label="品牌/车系/型号" align="center" min-width="215px">
+        <template slot-scope="scope">
+          <span>{{ scope.row.brandName }}/{{ scope.row.seriesName }}</span><br>
+          <span>{{ scope.row.type }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="图片" align="center" min-width="120px">
+        <template slot-scope="scope">
+          <el-image :src="getImageUrl(scope.row.imgPath)"/>
+        </template>
+      </el-table-column>
+      <el-table-column label="颜色" align="center" min-width="75px">
+        <template slot-scope="scope">
+          <span>{{ scope.row.color }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="售价"  prop="salePrice" align="center" min-width="105px">
+        <template slot-scope="scope">
+          <span>￥ {{ scope.row.salePrice }}</span>
+        </template>
+      </el-table-column>
+
+      <!-- 操作按钮：加入购物车和预约试驾 -->
+      <el-table-column label="操作" align="center" min-width="200px">
+        <template slot-scope="scope">
+          <el-button type="primary" size="small" @click="addToCart(scope.row)">加入购物车</el-button>
+          <el-button type="success" size="small" @click="bookTestDrive(scope.row)">预约试驾</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 分页 -->
+    <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
+
+    <!-- 预约试驾弹窗 -->
+    <el-dialog :visible.sync="isDialogVisible" title="预约试驾" width="500px"
+               @close="handleBeforeClosecart">
+      <el-form
+        ref="testDriveForm"
+        :model="testDriveForm"
+        :rules="rules"
+        label-width="120px"
+      >
+        <el-form-item label="车系" prop="seriesName">
+          <el-input v-model="testDriveForm.seriesName" disabled />
+        </el-form-item>
+        <el-form-item label="客户姓名" prop="customerName">
+          <el-input
+            v-model="testDriveForm.customerName"
+            placeholder="请输入姓名"
+            required
+          />
+        </el-form-item>
+        <el-form-item label="联系电话" prop="phone">
+          <el-input
+            v-model="testDriveForm.phone"
+            placeholder="请输入电话"
+            required
+          />
+        </el-form-item>
+        <el-form-item label="选择区域" prop="address">
+          <el-cascader
+            :options="pcaTextArr"
+            v-model="selectedOptions"
+            size="large"/>
+        </el-form-item>
+        <!-- 其他表单项 -->
+      </el-form>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="isDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="submitTestDrive()">提交申请</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog title="购物车" :visible.sync="isCartOpen">
+      <el-table
+        :key="tableKey"
+        :data="cartItems"
+        fit
+        highlight-current-row
+        style="width: 100%;"
+        @sort-change="sortChange">
+        <el-table-column label="品牌/车系/型号" align="center" min-width="215px">
+          <template slot-scope="scope">
+            <span>{{ scope.row.brandName }}/{{ scope.row.seriesName }}</span><br>
+            <span>{{ scope.row.type }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="售价"  prop="salePrice" align="center" min-width="105px">
+          <template slot-scope="scope">
+            <span>￥ {{ scope.row.salePrice }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="数量" align="center" min-width="105px">
+          <template slot-scope="scope">
+            <span>{{ scope.row.quantity }}</span>
+          </template>
+        </el-table-column>
+
+        <!-- 操作按钮：加入购物车和预约试驾 -->
+        <el-table-column label="操作" align="center" min-width="200px">
+          <template slot-scope="scope">
+            <el-button size="small" @click="increaseQuantity(scope.row)" icon="el-icon-plus"></el-button>
+            <el-button size="small" @click="decreaseQuantity(scope.row)" icon="el-icon-minus"></el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div style="text-align: right; margin-top: 20px;">
+        <span>总价: ￥{{ totalPrice }}</span>
+        <el-button type="primary" @click="checkout">结算</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import waves from '@/directive/waves' // Waves指令
+import Pagination from '@/components/Pagination' // 自定义分页组件
+import checkPermission from '@/utils/permission' // 权限判断函数
+import { fetchBrand, fetchSeries } from '../../api/init'
+import { fetchList, bookTestDriveApi } from '../../api/store'
+import { cascadeaddresslist } from '../../api/address'
+import { getUserInfo } from '../../api/login'
+// import { pcaTextArr } from 'element-china-area-data'
+import {
+  listItem,
+  addToCartApi,
+  addcartquantity,
+  delItem,
+  addItem,
+  updateItem,
+  delItemquantity, checkUserout
+} from '../../api/cartitem'
+import { mapState, mapActions, mapGetters } from 'vuex';
+import { addOrder } from '../../api/order'
+
+export default {
+  components: { Pagination },
+  directives: {
+    waves
+  },
+  computed: {
+    // totalPrice() {
+    //   return this.cartItems.reduce((total, item) => {
+    //     return total + (item.salePrice * item.quantity); // 假设每个商品有个数属性 `quantity`
+    //   }, 0);
+    // },
+    ...mapState('cart', ['cartItems']),
+    ...mapGetters('cart', ['cartCount', 'totalPrice']),
+  },
+
+  data() {
+    var validatePhone = (rule, value, callback) => {
+      if (!value) {
+        return callback(new Error('电话不能为空'))
+      }
+      // 假设这里使用了一个简单的电话格式校验，实际中可能需要更复杂的正则表达式
+      if (!/^1[34578]\d{9}$/.test(value)) {
+        return callback(new Error('请输入正确的电话格式'))
+      }
+      callback()
+    }
+    return {
+      // cartCount: 0,        // 购物车商品数量
+      items: [],           // 商品列表
+      // cartItems: [],       // 购物车中的商品
+      isCartOpen: false,    // 是否显示购物车详情
+      pcaTextArr: [],
+      selectedOptions: [],
+      info: {
+        name: null,
+        id: null,
+        role: null,
+        entryTime: null,
+        salary: null,
+        phone: null,
+        idCard: null,
+        gender: null,
+        // age: 28,
+        status: null,
+        pass: null
+      },
+      tableKey: 0,
+      list: null,
+      total: 0,
+      listLoading: true,
+      listQuery: {
+        page: 1,
+        limit: 5,
+        id: undefined,
+        brandId: undefined,
+        seriesId: undefined,
+        status: 1,
+        orderBy: undefined
+      },
+      options: [],
+      seriesOptions: [],
+      dialogFormVisible: false,
+      downloadLoading: false,
+
+      // 试驾预约弹窗相关数据
+      isDialogVisible: false, // 控制弹窗显示
+      testDriveForm: {
+        customerId: '',
+        carId: undefined,
+        phone: undefined,
+        seriesName: '',
+        customerName: '',
+        address: ''
+      },
+      rules: {
+        customerName: [
+          { required: true, message: '请输入客户姓名', trigger: 'blur' }
+        ],
+        phone: [
+          { required: true, validator: validatePhone, trigger: 'blur' }
+        ]
+        // testDriveDate: [ /* 如果需要，可以添加相关规则 */ ],
+      }
+    }
+  },
+  created() {
+    this.getList()
+    this.getSeriesOpt()
+    this.getInfo()
+    this.getAddressInfo()
+    this.loadCartItems(); // 初始化时加载购物车数据
+  },
+  methods: {
+    ...mapActions('cart', ['loadCartItems', 'addToCart', 'increaseCartItemQuantity', 'decreaseCartItemQuantity']),
+    openCart() {
+      this.loadCartItems(); // 加载购物车商品
+      this.isCartOpen = true;
+    },
+    addToCartHandler(row) {
+      this.addToCart(row);
+    },
+    increaseQuantity(item) {
+      this.increaseCartItemQuantity(item.id);
+    },
+    decreaseQuantity(item) {
+      this.decreaseCartItemQuantity(item.id);
+    },
+    // checkout() {
+    //   this.isCartOpen = false;
+    //   // 结算逻辑
+    // },
+    // increaseQuantity(item) {
+    //   // item.quantity++; // 增加数量
+    //   addcartquantity(item.id)
+    //   this.loadCartItems(); // 可以考虑更新购物车的数据
+    // },
+    // decreaseQuantity(item) {
+    //     // item.quantity--; // 减少数量
+    //     delItemquantity(item.id).then(response=>{
+    //       if (response.data.code === 20000) {
+    //
+    //       }
+    //     })
+    //   this.loadCartItems(); // 更新购物车的数据
+    // },
+    // // 打开购物车详情
+    // openCart() {
+    //   this.isCartOpen = true;
+    //   this.loadCartItems(); // 加载购物车商品
+    // },
+    handleClear() {
+      this.listQuery={
+        page: 1,
+        limit: 5,
+        id: undefined,
+        brandId: undefined,
+        seriesId: undefined,
+        status: 1,
+        orderBy: undefined
+      }
+      this.getList()
+    },
+    handleBeforeClosecart(){
+      this.isCartOpen = false; // 关闭购物车详情
+    },
+    // 加入购物车
+    addToCart(row) {
+      addToCartApi(row.id,this.info.id).then(response => {
+        if (response.data.code === 20000) {
+          this.$notify({
+            title: '成功',
+            message: '加入购物车成功',
+            type: 'success',
+            duration: 2000
+          })
+          this.loadCartItems()
+        } else {
+          this.$notify({
+            title: '错误',
+            message: response.data.message,
+            type: 'error',
+            duration: 2000
+          })
+        }
+      })
+    },
+    // 加载购物车商品
+    // loadCartItems() {
+    //   listItem(this.$store.getters.token).then(response => {
+    //       if (response.data.code === 20000) {
+    //         this.cartItems = response.data.data; // 更新购物车商品
+    //         this.cartCount = response.data.data.length; // 更新购物车数量
+    //       }
+    //   });
+    // },
+    // 结算
+    checkout() {
+      this.isCartOpen = false;
+      const userId = this.$store.getters.id
+      if (userId === null && userId === '') {
+        this.$message({
+          message: '登录信息有误，请重新登录!',
+          type: 'error'
+        })
+      }
+      // 实现结算逻辑
+      checkUserout(userId).then(response => {
+        if (response.data.code === 20000) {
+          this.info = response.data.data
+        }else {
+          this.$message({
+            message: response.data.message,
+            type: 'error'
+          })
+        }
+      })
+    },
+    handleFilter(){
+      this.getList()
+    },
+    handleBeforeClose(done) {
+      // 在关闭之前执行的操作，比如你可以添加确认提示
+      this.selectedOptions = [] // 重置选择区域
+      this.testDriveForm.customerName = '' // 重置客户姓名
+      this.testDriveForm.phone = '' // 重置联系电话
+      done() // 关闭对话框
+    },
+    getAddressInfo() {
+      cascadeaddresslist().then(response => {
+        this.pcaTextArr = response.data
+      })
+    },
+    getInfo() {
+      getUserInfo(this.$store.getters.token).then(response => {
+        if (response.data.code === 20000) {
+          this.info = response.data.data
+        }
+      })
+    },
+    // 获取图片
+    getImageUrl(imageId) {
+      return `http://localhost:8080/upload/imgs/${imageId}`
+    },
+    // 获取series（车系）
+    getSeriesOpt() {
+      fetchSeries().then(response => {
+        this.options = response.data.data
+        // this.getBrandOpt()
+      })
+    },
+    // 获取brand（品牌）
+    // getBrandOpt() {
+    //   fetchBrand().then(response => {
+    //     this.brandOptions = response.data.data
+    //   })
+    // },
+    checkPermission,
+    getList() {
+      this.listLoading = true
+      fetchList(this.listQuery).then(response => {
+        if (response.data.code === 20000) {
+          this.list = response.data.data.items
+          this.total = response.data.data.total
+        } else {
+          this.$message({
+            message: response.data.message,
+            type: 'error'
+          })
+        }
+        this.listLoading = false
+      })
+    },
+    // 预约试驾
+    bookTestDrive(row) {
+      this.testDriveForm.seriesName = `${row.brandName} / ${row.seriesName}`
+      this.testDriveForm.carId = row.id
+      this.testDriveForm.customerId = this.info.id
+      this.isDialogVisible = true // 显示弹窗
+    },
+    // 提交试驾预约
+    submitTestDrive() {
+      this.$refs['testDriveForm'].validate((valid) => {
+        if (valid) {
+          // 在此进行表单验证和提交
+          bookTestDriveApi(this.testDriveForm).then(response => {
+            if (response.data.code === 20000) {
+              this.$notify({
+                title: '成功',
+                message: '试驾预约成功',
+                type: 'success',
+                duration: 2000
+              })
+            } else {
+              this.$notify({
+                title: '错误',
+                message: '试驾预约失败',
+                type: 'error',
+                duration: 2000
+              })
+            }
+          })
+          this.isDialogVisible = false // 关闭弹窗
+          this.resetTestDriveForm() // 重置表单
+        } else {
+          this.$notify({
+            title: '请输入正确的信息',
+            message: '请输入正确的信息',
+            type: 'error',
+            duration: 2000
+          })
+        }
+      })
+    },
+    // 重置表单
+    resetTestDriveForm() {
+      this.testDriveForm = {
+        seriesName: '',
+        customerName: '',
+        phone: '',
+        testDriveDate: ''
+      }
+    }
+  }
+}
+</script>
