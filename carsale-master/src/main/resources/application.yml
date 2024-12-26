@@ -1,0 +1,33 @@
+server:
+  port: 8080
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.238.135:3306/carcale?useUnicode=true&characterEncoding=utf-8
+    username: root
+    password: Zc112325!
+  mvc:
+    static-path-pattern: /**
+  resources:
+    static-locations: classpath:/static/
+mybatis:
+  mapper-locations: classpath:mappers/*.xml
+  type-aliases-package: com.gxyan.pojo
+pagehelper:
+    helperDialect: mysql
+    reasonable: true
+    supportMethodsArguments: true
+    params: count=countSql
+jwt:
+    expiration: 3600
+    header: Authorization
+
+logging:
+  level:
+    root: INFO
+    com.gxyan: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+
+

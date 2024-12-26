@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gxyan.dao.PromotionMapper">
+
+    <resultMap type="Promotion" id="PromotionResult">
+        <result property="id"    column="id"    />
+        <result property="carId"    column="car_id"    />
+        <result property="promotionText"    column="promotion_text"    />
+        <result property="createdAt"    column="created_at"    />
+        <result property="updatedAt"    column="updated_at"    />
+    </resultMap>
+    <resultMap type="PromotionVO" id="PromotionResult2">
+        <result property="promotionId"    column="promotion_id"    />
+        <result property="brandName"    column="brand_name"    />
+        <result property="promotionText"    column="promotion_text"    />
+        <result property="seriesName"    column="series_name"    />
+        <result property="carType"    column="car_type"    />
+        <result property="carColor"    column="car_color"    />
+        <result property="carInventory"    column="car_inventory"    />
+        <result property="carStatus"    column="car_status"    />
+        <result property="carImageUrl"    column="car_image_path"    />
+    </resultMap>
+    <sql id="selectPromotionVo">
+        select id, car_id, promotion_text, created_at, updated_at from promotion
+    </sql>
+
+    <select id="selectPromotionList" parameterType="Promotion" resultMap="PromotionResult">
+        <include refid="selectPromotionVo"/>
+        <where>
+            <if test="carId != null "> and car_id = #{carId}</if>
+            <if test="promotionText != null  and promotionText != ''"> and promotion_text = #{promotionText}</if>
+            <if test="createdAt != null "> and created_at = #{createdAt}</if>
+            <if test="updatedAt != null "> and updated_at = #{updatedAt}</if>
+        </where>
+    </select>
+
+    <select id="selectPromotionById" parameterType="Long" resultMap="PromotionResult">
+        <include refid="selectPromotionVo"/>
+        where id = #{id}
+    </select>
+    <select id="selectSelective" parameterType="com.gxyan.vo.StoreQuery" resultType="com.gxyan.pojo.PromotionVO">
+        SELECT
+        p.id AS promotionId,
+        p.promotion_text AS promotionText,
+        b.brand_name AS brandName,
+        s.series_name AS seriesName,
+        c.type AS carType,
+        c.color AS carColor,
+        c.id AS carId,
+        c.repertory AS carInventory,
+        c.status AS carStatus,
+        c.img_path AS carImageUrl
+        FROM
+        promotion p
+        JOIN
+        car c ON p.car_id = c.id
+        JOIN
+        series s ON c.series_id = s.series_id
+        JOIN
+        brand b ON s.brand_id = b.brand_id
+        <where>
+            <choose>
+
+                <when test="carId != null and carId != ''">
+                    p.car_id = #{carId}
+                </when>
+                <when test="brandId != null and brandId != ''">
+                    b.brand_id = #{brandId}
+                </when>
+                <when test="seriesId != null and seriesId != ''">
+                    s.series_id = #{seriesId}
+                </when>
+            </choose>
+            <if test="status != null and status != ''">
+                and c.status = #{status}
+            </if>
+        </where>
+        <if test="orderBy != null and orderBy != ''">
+            order by ${orderBy}
+        </if>
+    </select>
+
+
+
+
+    <insert id="insertPromotion" parameterType="Promotion" useGeneratedKeys="true" keyProperty="id">
+        insert into promotion
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="carId != null">car_id,</if>
+            <if test="promotionText != null and promotionText != ''">promotion_text,</if>
+            <if test="createdAt != null">created_at,</if>
+            <if test="updatedAt != null">updated_at,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="carId != null">#{carId},</if>
+            <if test="promotionText != null and promotionText != ''">#{promotionText},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+            <if test="updatedAt != null">#{updatedAt},</if>
+         </trim>
+    </insert>
+
+    <update id="updatePromotion" parameterType="Promotion">
+        update promotion
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="carId != null">car_id = #{carId},</if>
+            <if test="promotionText != null and promotionText != ''">promotion_text = #{promotionText},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+            <if test="updatedAt != null">updated_at = #{updatedAt},</if>
+        </trim>
+        where id = #{id}
+    </update>
+    <update id="updatepromotion">
+        update promotion set promotion_text = #{promotionText} where id = #{aLong}
+    </update>
+
+    <delete id="deletePromotionById" parameterType="Long">
+        delete from promotion where id = #{id}
+    </delete>
+
+    <delete id="deletePromotionByIds" parameterType="String">
+        delete from promotion where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
