@@ -1,0 +1,24 @@
+body {
+  margin: 0;
+}
+label {
+  font-weight: 700;
+}
+.el-table {
+  .el-table__header-wrapper,
+  .el-table__fixed-header-wrapper {
+    th {
+      word-break: break-word;
+      background-color: #32C5FF !important;
+      color: #ffff;
+      height: 40px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+  }
+  .el-table__body-wrapper {
+    .el-button [class*="el-icon-"] + span {
+      margin-left: 1px;
+    }
+  }
+}
