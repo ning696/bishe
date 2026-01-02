@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.enterprise.mapper.InterviewMapper">
+
+    <resultMap id="InterviewListVOResultMap" type="cn.zc.enterprise.domain.vo.InterviewListVO">
+        <id property="id" column="id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="studentName" column="student_name"/>
+        <result property="jobId" column="job_id"/>
+        <result property="jobName" column="job_name"/>
+        <result property="interviewTime" column="interview_time"/>
+        <result property="interviewLocation" column="interview_location"/>
+        <result property="interviewType" column="interview_type"/>
+        <result property="interviewStatus" column="interview_status"/>
+        <result property="interviewStatusName" column="interview_status_name"/>
+        <result property="contactPerson" column="contact_person"/>
+        <result property="contactPhone" column="contact_phone"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectInterviewList" resultMap="InterviewListVOResultMap">
+        SELECT
+            i.id,
+            i.student_id,
+            s.real_name AS student_name,
+            i.job_id,
+            j.job_name,
+            i.interview_time,
+            i.interview_location,
+            i.interview_type,
+            i.interview_status,
+            CASE i.interview_status
+                WHEN 0 THEN '待安排'
+                WHEN 1 THEN '已安排'
+                WHEN 2 THEN '已完成'
+                WHEN 3 THEN '已取消'
+                ELSE '未知'
+            END AS interview_status_name,
+            i.contact_person,
+            i.contact_phone,
+            i.create_time
+        FROM interview i
+        LEFT JOIN student s ON i.student_id = s.id
+        LEFT JOIN job j ON i.job_id = j.id
+        WHERE i.enterprise_id = #{enterpriseId}
+        <if test="jobId != null">
+            AND i.job_id = #{jobId}
+        </if>
+        <if test="interviewStatus != null">
+            AND i.interview_status = #{interviewStatus}
+        </if>
+        ORDER BY i.create_time DESC
+    </select>
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,14 @@
+package cn.zc.common.swagger;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class HiringCommonSwaggerApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(HiringCommonSwaggerApplication.class, args);
+    }
+
+}
+

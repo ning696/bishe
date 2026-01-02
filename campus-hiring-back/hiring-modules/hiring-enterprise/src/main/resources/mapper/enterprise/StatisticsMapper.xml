@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.enterprise.mapper.StatisticsMapper">
+
+    <select id="selectRecruitmentStatistics" resultType="map">
+        SELECT
+            COUNT(DISTINCT j.id) AS totalJobs,
+            COUNT(DISTINCT CASE WHEN j.status = 1 THEN j.id END) AS publishedJobs,
+            COALESCE(SUM(j.view_count), 0) AS totalViews,
+            COALESCE(SUM(j.apply_count), 0) AS totalApplications,
+            COUNT(DISTINCT ja.id) AS totalResumes,
+            COUNT(DISTINCT i.id) AS totalInterviews,
+            CASE 
+                WHEN COUNT(DISTINCT j.id) > 0 
+                THEN ROUND(COALESCE(SUM(j.view_count), 0) / COUNT(DISTINCT j.id), 2)
+                ELSE 0 
+            END AS averageViewsPerJob,
+            CASE 
+                WHEN COUNT(DISTINCT j.id) > 0 
+                THEN ROUND(COALESCE(SUM(j.apply_count), 0) / COUNT(DISTINCT j.id), 2)
+                ELSE 0 
+            END AS averageApplicationsPerJob,
+            CASE 
+                WHEN COALESCE(SUM(j.view_count), 0) > 0 
+                THEN ROUND(COALESCE(SUM(j.apply_count), 0) * 100.0 / SUM(j.view_count), 2)
+                ELSE 0 
+            END AS conversionRate
+        FROM job j
+        LEFT JOIN job_application ja ON j.id = ja.job_id
+        LEFT JOIN interview i ON j.id = i.job_id
+        WHERE j.enterprise_id = #{enterpriseId}
+        <if test="startDate != null and startDate != ''">
+            AND j.create_time >= #{startDate}
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND j.create_time &lt;= CONCAT(#{endDate}, ' 23:59:59')
+        </if>
+        <if test="jobId != null">
+            AND j.id = #{jobId}
+        </if>
+    </select>
+
+    <select id="selectJobStatistics" resultType="map">
+        SELECT
+            j.id AS jobId,
+            j.job_name AS jobName,
+            COALESCE(j.view_count, 0) AS viewCount,
+            COALESCE(j.apply_count, 0) AS applyCount,
+            COUNT(DISTINCT ja.id) AS resumeCount,
+            COUNT(DISTINCT i.id) AS interviewCount
+        FROM job j
+        LEFT JOIN job_application ja ON j.id = ja.job_id
+        LEFT JOIN interview i ON j.id = i.job_id
+        WHERE j.enterprise_id = #{enterpriseId}
+        <if test="startDate != null and startDate != ''">
+            AND j.create_time >= #{startDate}
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND j.create_time &lt;= CONCAT(#{endDate}, ' 23:59:59')
+        </if>
+        <if test="jobId != null">
+            AND j.id = #{jobId}
+        </if>
+        GROUP BY j.id, j.job_name, j.view_count, j.apply_count
+        ORDER BY j.create_time DESC
+    </select>
+
+    <select id="selectTrendData" resultType="map">
+        SELECT
+            DATE(j.create_time) AS date,
+            COUNT(DISTINCT j.id) AS viewCount,
+            COUNT(DISTINCT ja.id) AS applyCount
+        FROM job j
+        LEFT JOIN job_application ja ON j.id = ja.job_id
+        WHERE j.enterprise_id = #{enterpriseId}
+        <if test="startDate != null and startDate != ''">
+            AND j.create_time >= #{startDate}
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND j.create_time &lt;= CONCAT(#{endDate}, ' 23:59:59')
+        </if>
+        <if test="jobId != null">
+            AND j.id = #{jobId}
+        </if>
+        GROUP BY DATE(j.create_time)
+        ORDER BY date ASC
+    </select>
+
+    <select id="selectAnalysisStatistics" resultType="map">
+        SELECT
+            COUNT(DISTINCT j.id) AS totalJobs,
+            COALESCE(SUM(j.view_count), 0) AS totalViews,
+            COUNT(DISTINCT ja.id) AS totalApplications,
+            COUNT(DISTINCT i.id) AS totalInterviews,
+            COUNT(DISTINCT CASE WHEN i.interview_status = 2 THEN i.id END) AS totalHires,
+            CASE 
+                WHEN COALESCE(SUM(j.view_count), 0) > 0 
+                THEN ROUND(COUNT(DISTINCT ja.id) * 100.0 / SUM(j.view_count), 2)
+                ELSE 0 
+            END AS viewToApplicationRate,
+            CASE 
+                WHEN COUNT(DISTINCT ja.id) > 0 
+                THEN ROUND(COUNT(DISTINCT i.id) * 100.0 / COUNT(DISTINCT ja.id), 2)
+                ELSE 0 
+            END AS applicationToInterviewRate,
+            CASE 
+                WHEN COUNT(DISTINCT i.id) > 0 
+                THEN ROUND(COUNT(DISTINCT CASE WHEN i.interview_status = 2 THEN i.id END) * 100.0 / COUNT(DISTINCT i.id), 2)
+                ELSE 0 
+            END AS interviewToHireRate,
+            CASE 
+                WHEN COUNT(DISTINCT CASE WHEN i.interview_status = 2 THEN i.id END) > 0 
+                THEN ROUND(AVG(DATEDIFF(i.create_time, j.create_time)), 0)
+                ELSE 0 
+            END AS averageTimeToFill
+        FROM job j
+        LEFT JOIN job_application ja ON j.id = ja.job_id
+        LEFT JOIN interview i ON j.id = i.job_id
+        WHERE j.enterprise_id = #{enterpriseId}
+        <if test="startDate != null and startDate != ''">
+            AND j.create_time >= #{startDate}
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND j.create_time &lt;= CONCAT(#{endDate}, ' 23:59:59')
+        </if>
+    </select>
+
+    <select id="selectTopPerformingJobs" resultType="map">
+        SELECT
+            j.id AS jobId,
+            j.job_name AS jobName,
+            COALESCE(j.view_count, 0) AS viewCount,
+            COALESCE(j.apply_count, 0) AS applyCount,
+            CASE 
+                WHEN COALESCE(j.view_count, 0) > 0 
+                THEN ROUND(COALESCE(j.apply_count, 0) * 100.0 / j.view_count, 2)
+                ELSE 0 
+            END AS performanceScore
+        FROM job j
+        WHERE j.enterprise_id = #{enterpriseId}
+        <if test="startDate != null and startDate != ''">
+            AND j.create_time >= #{startDate}
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND j.create_time &lt;= CONCAT(#{endDate}, ' 23:59:59')
+        </if>
+        ORDER BY performanceScore DESC, j.view_count DESC
+        LIMIT 10
+    </select>
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+

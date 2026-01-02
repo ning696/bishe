@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.enterprise.mapper.ComplaintMapper">
+
+    <resultMap id="ComplaintListVOResultMap" type="cn.zc.enterprise.domain.vo.ComplaintListVO">
+        <id property="id" column="id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="studentName" column="student_name"/>
+        <result property="jobId" column="job_id"/>
+        <result property="jobName" column="job_name"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="handleStatus" column="handle_status"/>
+        <result property="handleStatusName" column="handle_status_name"/>
+        <result property="handleResult" column="handle_result"/>
+        <result property="handleTime" column="handle_time"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectComplaintList" resultMap="ComplaintListVOResultMap">
+        SELECT
+            c.id,
+            c.complained_id AS student_id,
+            s.real_name AS student_name,
+            c.job_id,
+            j.job_name,
+            c.title,
+            c.content,
+            c.handle_status,
+            CASE c.handle_status
+                WHEN 0 THEN '待处理'
+                WHEN 1 THEN '处理中'
+                WHEN 2 THEN '已处理'
+                WHEN 3 THEN '已关闭'
+                ELSE '未知'
+            END AS handle_status_name,
+            c.handle_result,
+            c.handle_time,
+            c.create_time
+        FROM complaint c
+        LEFT JOIN student s ON c.complained_id = s.id
+        LEFT JOIN job j ON c.job_id = j.id
+        WHERE c.complainer_id = #{enterpriseId}
+        AND c.complainer_type = 2
+        <if test="handleStatus != null">
+            AND c.handle_status = #{handleStatus}
+        </if>
+        ORDER BY c.create_time DESC
+    </select>
+
+    <select id="countStudentById" resultType="int">
+        SELECT COUNT(1)
+        FROM student
+        WHERE id = #{studentId}
+    </select>
+
+    <select id="countJobByIdAndEnterprise" resultType="int">
+        SELECT COUNT(1)
+        FROM job
+        WHERE id = #{jobId}
+        <if test="enterpriseId != null">
+            AND enterprise_id = #{enterpriseId}
+        </if>
+    </select>
+
+</mapper>
+

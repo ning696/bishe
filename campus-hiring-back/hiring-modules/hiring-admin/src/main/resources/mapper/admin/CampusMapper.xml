@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.admin.mapper.CampusMapper">
+
+    <resultMap id="CampusListVOResultMap" type="cn.zc.admin.domain.vo.CampusListVO">
+        <id property="id" column="id"/>
+        <result property="campusName" column="campus_name"/>
+        <result property="campusCode" column="campus_code"/>
+        <result property="address" column="address"/>
+        <result property="contactPerson" column="contact_person"/>
+        <result property="contactPhone" column="contact_phone"/>
+        <result property="status" column="status"/>
+        <result property="statusName" column="status_name"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectCampusList" resultMap="CampusListVOResultMap">
+        SELECT
+            id,
+            campus_name,
+            campus_code,
+            address,
+            contact_person,
+            contact_phone,
+            status,
+            CASE status
+                WHEN 0 THEN '禁用'
+                WHEN 1 THEN '启用'
+                ELSE '未知'
+            END AS status_name,
+            create_time
+        FROM campus
+        <where>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    campus_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR campus_code LIKE CONCAT('%', #{keyword}, '%')
+                    OR address LIKE CONCAT('%', #{keyword}, '%')
+                    OR contact_person LIKE CONCAT('%', #{keyword}, '%')
+                    OR contact_phone LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <resultMap id="CampusDetailVOResultMap" type="cn.zc.admin.domain.vo.CampusDetailVO">
+        <id property="id" column="id"/>
+        <result property="campusName" column="campus_name"/>
+        <result property="campusCode" column="campus_code"/>
+        <result property="address" column="address"/>
+        <result property="contactPerson" column="contact_person"/>
+        <result property="contactPhone" column="contact_phone"/>
+        <result property="status" column="status"/>
+        <result property="statusName" column="status_name"/>
+        <result property="remark" column="remark"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <select id="selectCampusDetail" resultMap="CampusDetailVOResultMap">
+        SELECT
+            id,
+            campus_name,
+            campus_code,
+            address,
+            contact_person,
+            contact_phone,
+            status,
+            CASE status
+                WHEN 0 THEN '禁用'
+                WHEN 1 THEN '启用'
+                ELSE '未知'
+            END AS status_name,
+            remark,
+            create_by,
+            create_time,
+            update_by,
+            update_time
+        FROM campus
+        WHERE id = #{campusId}
+    </select>
+
+</mapper>
+

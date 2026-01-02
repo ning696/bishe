@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.enterprise.mapper.ChatSessionMapper">
+
+    <resultMap id="ChatSessionListVOResultMap" type="cn.zc.enterprise.domain.vo.ChatSessionListVO">
+        <id property="id" column="id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="studentName" column="student_name"/>
+        <result property="studentAvatar" column="student_avatar"/>
+        <result property="jobId" column="job_id"/>
+        <result property="jobName" column="job_name"/>
+        <result property="lastMessageContent" column="last_message_content"/>
+        <result property="lastMessageTime" column="last_message_time"/>
+        <result property="unreadCount" column="unread_count"/>
+        <result property="isOnline" column="is_online"/>
+    </resultMap>
+
+    <resultMap id="ChatSessionDetailVOResultMap" type="cn.zc.enterprise.domain.vo.ChatSessionDetailVO">
+        <id property="id" column="id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="studentName" column="student_name"/>
+        <result property="studentAvatar" column="student_avatar"/>
+        <result property="jobId" column="job_id"/>
+        <result property="jobName" column="job_name"/>
+        <result property="isOnline" column="is_online"/>
+    </resultMap>
+
+    <select id="selectSessionList" resultMap="ChatSessionListVOResultMap">
+        SELECT
+            cs.id,
+            cs.student_id,
+            s.nick_name AS student_name,
+            s.head_image AS student_avatar,
+            cs.job_id,
+            j.job_name,
+            cs.last_message_content,
+            cs.last_message_time,
+            cs.enterprise_unread_count AS unread_count,
+            0 AS is_online
+        FROM chat_session cs
+        LEFT JOIN student s ON cs.student_id = s.id
+        LEFT JOIN job j ON cs.job_id = j.id
+        WHERE cs.enterprise_id = #{enterpriseId}
+          AND cs.status = 1
+        <if test="keyword != null and keyword != ''">
+            AND (s.nick_name LIKE CONCAT('%', #{keyword}, '%')
+                 OR s.real_name LIKE CONCAT('%', #{keyword}, '%')
+                 OR j.job_name LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY cs.last_message_time DESC, cs.create_time DESC
+    </select>
+
+    <select id="selectSessionDetail" resultMap="ChatSessionDetailVOResultMap">
+        SELECT
+            cs.id,
+            cs.student_id,
+            s.nick_name AS student_name,
+            s.head_image AS student_avatar,
+            cs.job_id,
+            j.job_name,
+            0 AS is_online
+        FROM chat_session cs
+        LEFT JOIN student s ON cs.student_id = s.id
+        LEFT JOIN job j ON cs.job_id = j.id
+        WHERE cs.id = #{sessionId}
+          AND cs.enterprise_id = #{enterpriseId}
+          AND cs.status = 1
+        LIMIT 1
+    </select>
+
+</mapper>
+

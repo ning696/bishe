@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.admin.mapper.EnterpriseMapper">
+
+    <resultMap id="EnterpriseListVOResultMap" type="cn.zc.admin.domain.vo.EnterpriseListVO">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="enterpriseName" column="enterprise_name"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="status" column="status"/>
+        <result property="statusName" column="status_name"/>
+        <result property="certificationStatus" column="certification_status"/>
+        <result property="certificationStatusName" column="certification_status_name"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectEnterpriseList" resultMap="EnterpriseListVOResultMap">
+        SELECT
+            id,
+            username,
+            enterprise_name,
+            phone,
+            email,
+            status,
+            CASE status
+                WHEN 0 THEN '已拉黑'
+                WHEN 1 THEN '正常'
+                WHEN 2 THEN '已禁用'
+                WHEN 3 THEN '待审核'
+                ELSE '未知'
+            END AS status_name,
+            certification_status,
+            CASE certification_status
+                WHEN 0 THEN '未认证'
+                WHEN 1 THEN '已认证'
+                WHEN 2 THEN '认证中'
+                WHEN 3 THEN '认证失败'
+                ELSE '未知'
+            END AS certification_status_name,
+            create_time
+        FROM enterprise
+        <where>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (username LIKE CONCAT('%', #{keyword}, '%')
+                OR enterprise_name LIKE CONCAT('%', #{keyword}, '%')
+                OR phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <resultMap id="EnterpriseDetailVOResultMap" type="cn.zc.admin.domain.vo.EnterpriseDetailVO">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="enterpriseName" column="enterprise_name"/>
+        <result property="legalPerson" column="legal_person"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="logo" column="logo"/>
+        <result property="address" column="address"/>
+        <result property="industry" column="industry"/>
+        <result property="scale" column="scale"/>
+        <result property="description" column="description"/>
+        <result property="website" column="website"/>
+        <result property="certificationStatus" column="certification_status"/>
+        <result property="certificationStatusName" column="certification_status_name"/>
+        <result property="status" column="status"/>
+        <result property="statusName" column="status_name"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectEnterpriseDetail" resultMap="EnterpriseDetailVOResultMap">
+        SELECT
+            id,
+            username,
+            enterprise_name,
+            legal_person,
+            phone,
+            email,
+            logo,
+            address,
+            industry,
+            scale,
+            description,
+            website,
+            certification_status,
+            CASE certification_status
+                WHEN 0 THEN '未认证'
+                WHEN 1 THEN '已认证'
+                WHEN 2 THEN '认证中'
+                WHEN 3 THEN '认证失败'
+                ELSE '未知'
+            END AS certification_status_name,
+            status,
+            CASE status
+                WHEN 0 THEN '已拉黑'
+                WHEN 1 THEN '正常'
+                WHEN 2 THEN '已禁用'
+                WHEN 3 THEN '待审核'
+                ELSE '未知'
+            END AS status_name,
+            create_time
+        FROM enterprise
+        WHERE id = #{enterpriseId}
+    </select>
+
+    <resultMap id="EnterpriseCertificationListVOResultMap" type="cn.zc.admin.domain.vo.EnterpriseCertificationListVO">
+        <id property="id" column="id"/>
+        <result property="enterpriseName" column="enterprise_name"/>
+        <result property="legalPerson" column="legal_person"/>
+        <result property="phone" column="phone"/>
+        <result property="certificationStatus" column="certification_status"/>
+        <result property="certificationStatusName" column="certification_status_name"/>
+        <result property="certificationFile" column="certification_file"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectCertificationList" resultMap="EnterpriseCertificationListVOResultMap">
+        SELECT
+            id,
+            enterprise_name,
+            legal_person,
+            phone,
+            certification_status,
+            CASE certification_status
+                WHEN 0 THEN '未认证'
+                WHEN 1 THEN '已认证'
+                WHEN 2 THEN '认证中'
+                WHEN 3 THEN '认证失败'
+                ELSE '未知'
+            END AS certification_status_name,
+            certification_file,
+            create_time
+        FROM enterprise
+        <where>
+            <if test="certificationStatus != null">
+                AND certification_status = #{certificationStatus}
+            </if>
+            <if test="enterpriseName != null and enterpriseName != ''">
+                AND enterprise_name LIKE CONCAT('%', #{enterpriseName}, '%')
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>
+

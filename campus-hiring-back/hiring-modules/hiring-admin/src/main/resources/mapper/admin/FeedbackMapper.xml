@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.admin.mapper.FeedbackMapper">
+
+    <resultMap id="FeedbackListVOResultMap" type="cn.zc.admin.domain.vo.FeedbackListVO">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="userType" column="user_type"/>
+        <result property="userName" column="user_name"/>
+        <result property="feedbackType" column="feedback_type"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="handleStatus" column="handle_status"/>
+        <result property="handleStatusName" column="handle_status_name"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectFeedbackList" resultMap="FeedbackListVOResultMap">
+        SELECT
+            f.id,
+            f.user_id,
+            f.user_type,
+            CASE f.user_type
+                WHEN 1 THEN s.nick_name
+                WHEN 2 THEN e.enterprise_name
+                WHEN 3 THEN a.nick_name
+                ELSE '未知'
+            END AS user_name,
+            f.feedback_type,
+            f.title,
+            f.content,
+            f.handle_status,
+            CASE f.handle_status
+                WHEN 0 THEN '待处理'
+                WHEN 1 THEN '已处理'
+                WHEN 2 THEN '已关闭'
+                ELSE '未知'
+            END AS handle_status_name,
+            f.create_time
+        FROM feedback f
+        LEFT JOIN student s ON f.user_type = 1 AND f.user_id = s.id
+        LEFT JOIN enterprise e ON f.user_type = 2 AND f.user_id = e.id
+        LEFT JOIN admin a ON f.user_type = 3 AND f.user_id = a.id
+        <where>
+            <if test="handleStatus != null">
+                AND f.handle_status = #{handleStatus}
+            </if>
+            <if test="feedbackType != null and feedbackType != ''">
+                AND f.feedback_type = #{feedbackType}
+            </if>
+        </where>
+        ORDER BY f.create_time DESC
+    </select>
+
+</mapper>
+

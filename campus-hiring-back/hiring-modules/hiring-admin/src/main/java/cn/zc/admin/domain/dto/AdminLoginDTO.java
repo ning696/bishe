@@ -1,0 +1,27 @@
+package cn.zc.admin.domain.dto;
+
+import lombok.Data;
+
+import java.io.Serializable;
+
+/**
+ * 管理员登录DTO
+ * 
+ * @author campus-hiring-system
+ */
+@Data
+public class AdminLoginDTO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 用户名
+     */
+    private String username;
+
+    /**
+     * 密码
+     */
+    private String password;
+}
+

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.enterprise.mapper.JobApplicationMapper">
+
+    <resultMap id="JobApplicationListVOResultMap" type="cn.zc.enterprise.domain.vo.JobApplicationListVO">
+        <id property="id" column="id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="studentName" column="student_name"/>
+        <result property="studentPhone" column="student_phone"/>
+        <result property="jobId" column="job_id"/>
+        <result property="jobName" column="job_name"/>
+        <result property="resumeId" column="resume_id"/>
+        <result property="applicationStatus" column="application_status"/>
+        <result property="applicationStatusName" column="application_status_name"/>
+        <result property="applicationTime" column="application_time"/>
+    </resultMap>
+
+    <select id="selectJobApplicationList" resultMap="JobApplicationListVOResultMap">
+        SELECT
+            ja.id,
+            ja.student_id,
+            s.real_name AS student_name,
+            s.phone AS student_phone,
+            ja.job_id,
+            j.job_name,
+            ja.resume_id,
+            ja.application_status,
+            CASE ja.application_status
+                WHEN 0 THEN '待处理'
+                WHEN 1 THEN '已通过'
+                WHEN 2 THEN '已拒绝'
+                WHEN 3 THEN '已取消'
+                ELSE '未知'
+            END AS application_status_name,
+            ja.application_time
+        FROM job_application ja
+        LEFT JOIN student s ON ja.student_id = s.id
+        LEFT JOIN job j ON ja.job_id = j.id
+        WHERE j.enterprise_id = #{enterpriseId}
+        <if test="jobId != null">
+            AND ja.job_id = #{jobId}
+        </if>
+        <if test="applicationStatus != null">
+            AND ja.application_status = #{applicationStatus}
+        </if>
+        ORDER BY ja.application_time DESC
+    </select>
+
+    <resultMap id="ResumeApplicationListVOResultMap" type="cn.zc.enterprise.domain.vo.ResumeApplicationListVO">
+        <id property="id" column="id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="studentName" column="student_name"/>
+        <result property="studentPhone" column="student_phone"/>
+        <result property="jobId" column="job_id"/>
+        <result property="jobName" column="job_name"/>
+        <result property="resumeId" column="resume_id"/>
+        <result property="resumeName" column="resume_name"/>
+        <result property="resumeFile" column="resume_file"/>
+        <result property="applicationStatus" column="application_status"/>
+        <result property="applicationStatusName" column="application_status_name"/>
+        <result property="applicationTime" column="application_time"/>
+    </resultMap>
+
+    <select id="selectResumeApplicationList" resultMap="ResumeApplicationListVOResultMap">
+        SELECT
+            ja.id,
+            ja.student_id,
+            s.real_name AS student_name,
+            s.phone AS student_phone,
+            ja.job_id,
+            j.job_name,
+            ja.resume_id,
+            r.resume_name AS resume_name,
+            r.resume_file,
+            ja.application_status,
+            CASE ja.application_status
+                WHEN 0 THEN '待处理'
+                WHEN 1 THEN '已通过'
+                WHEN 2 THEN '已拒绝'
+                WHEN 3 THEN '已取消'
+                ELSE '未知'
+            END AS application_status_name,
+            ja.application_time
+        FROM job_application ja
+        LEFT JOIN student s ON ja.student_id = s.id
+        LEFT JOIN job j ON ja.job_id = j.id
+        LEFT JOIN resume r ON ja.resume_id = r.id
+        WHERE j.enterprise_id = #{enterpriseId}
+        <if test="jobId != null">
+            AND ja.job_id = #{jobId}
+        </if>
+        <if test="applicationStatus != null">
+            AND ja.application_status = #{applicationStatus}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                s.real_name LIKE CONCAT('%', #{keyword}, '%')
+                OR s.major LIKE CONCAT('%', #{keyword}, '%')
+                OR s.skills LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        ORDER BY ja.application_time DESC
+    </select>
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+

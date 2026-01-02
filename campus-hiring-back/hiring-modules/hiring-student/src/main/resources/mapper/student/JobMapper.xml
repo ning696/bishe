@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.student.mapper.JobMapper">
+
+    <resultMap id="JobListVOResultMap" type="cn.zc.student.domain.vo.JobListVO">
+        <id property="id" column="id"/>
+        <result property="enterpriseId" column="enterprise_id"/>
+        <result property="enterpriseName" column="enterprise_name"/>
+        <result property="jobName" column="job_name"/>
+        <result property="workLocation" column="work_location"/>
+        <result property="salaryMin" column="salary_min"/>
+        <result property="salaryMax" column="salary_max"/>
+        <result property="salaryType" column="salary_type"/>
+        <result property="jobType" column="job_type"/>
+        <result property="recruitCount" column="recruit_count"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="applyCount" column="apply_count"/>
+        <result property="publishTime" column="publish_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="isFavorite" column="is_favorite"/>
+        <result property="favoriteTime" column="favorite_time"/>
+        <result property="matchScore" column="match_score"/>
+    </resultMap>
+
+    <select id="selectJobListForStudent" resultMap="JobListVOResultMap">
+        SELECT
+            j.id,
+            j.enterprise_id,
+            e.enterprise_name,
+            j.job_name,
+            j.work_location,
+            j.salary_min,
+            j.salary_max,
+            j.salary_type,
+            j.job_type,
+            j.recruit_count,
+            j.view_count,
+            j.apply_count,
+            j.publish_time,
+            j.create_time,
+            CASE WHEN jf.id IS NOT NULL THEN 1 ELSE 0 END AS is_favorite
+        FROM job j
+        LEFT JOIN enterprise e ON j.enterprise_id = e.id
+        LEFT JOIN job_favorite jf ON j.id = jf.job_id 
+            <if test="studentId != null">
+                AND jf.student_id = #{studentId}
+            </if>
+        <where>
+            j.status = 1
+            AND (j.expire_time IS NULL OR j.expire_time &gt; NOW())
+            <if test="dto.jobName != null and dto.jobName != ''">
+                AND j.job_name LIKE CONCAT('%', #{dto.jobName}, '%')
+            </if>
+            <if test="dto.categoryId != null">
+                AND j.category_id = #{dto.categoryId}
+            </if>
+            <if test="dto.workLocation != null and dto.workLocation != ''">
+                AND j.work_location LIKE CONCAT('%', #{dto.workLocation}, '%')
+            </if>
+            <if test="dto.jobType != null and dto.jobType != ''">
+                AND j.job_type = #{dto.jobType}
+            </if>
+            <if test="dto.requiredEducation != null and dto.requiredEducation != ''">
+                AND j.required_education = #{dto.requiredEducation}
+            </if>
+            <if test="dto.salaryMin != null">
+                AND (j.salary_max IS NULL OR j.salary_max &gt;= #{dto.salaryMin})
+            </if>
+            <if test="dto.salaryMax != null">
+                AND (j.salary_min IS NULL OR j.salary_min &lt;= #{dto.salaryMax})
+            </if>
+        </where>
+        <choose>
+            <when test="dto.sortField != null and dto.sortField != ''">
+                <choose>
+                    <when test="dto.sortField == 'publishTime'">
+                        ORDER BY j.publish_time
+                        <if test="dto.sortOrder == 'asc'">ASC</if>
+                        <if test="dto.sortOrder == 'desc' or dto.sortOrder == null">DESC</if>
+                    </when>
+                    <when test="dto.sortField == 'salary'">
+                        ORDER BY j.salary_max
+                        <if test="dto.sortOrder == 'asc'">ASC</if>
+                        <if test="dto.sortOrder == 'desc' or dto.sortOrder == null">DESC</if>
+                    </when>
+                    <when test="dto.sortField == 'viewCount'">
+                        ORDER BY j.view_count
+                        <if test="dto.sortOrder == 'asc'">ASC</if>
+                        <if test="dto.sortOrder == 'desc' or dto.sortOrder == null">DESC</if>
+                    </when>
+                    <otherwise>
+                        ORDER BY j.publish_time DESC
+                    </otherwise>
+                </choose>
+            </when>
+            <otherwise>
+                ORDER BY j.publish_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <resultMap id="JobDetailVOResultMap" type="cn.zc.student.domain.vo.JobDetailVO">
+        <id property="id" column="id"/>
+        <result property="enterpriseId" column="enterprise_id"/>
+        <result property="enterpriseName" column="enterprise_name"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="jobName" column="job_name"/>
+        <result property="jobDescription" column="job_description"/>
+        <result property="requiredMajor" column="required_major"/>
+        <result property="requiredSkills" column="required_skills"/>
+        <result property="requiredEducation" column="required_education"/>
+        <result property="requiredExperience" column="required_experience"/>
+        <result property="workLocation" column="work_location"/>
+        <result property="salaryMin" column="salary_min"/>
+        <result property="salaryMax" column="salary_max"/>
+        <result property="salaryType" column="salary_type"/>
+        <result property="jobType" column="job_type"/>
+        <result property="recruitCount" column="recruit_count"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="applyCount" column="apply_count"/>
+        <result property="publishTime" column="publish_time"/>
+        <result property="expireTime" column="expire_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="isFavorite" column="is_favorite"/>
+        <result property="isApplied" column="is_applied"/>
+    </resultMap>
+
+    <select id="selectJobDetailForStudent" resultMap="JobDetailVOResultMap">
+        SELECT
+            j.id,
+            j.enterprise_id,
+            e.enterprise_name,
+            j.category_id,
+            jc.category_name,
+            j.job_name,
+            j.job_description,
+            j.required_major,
+            j.required_skills,
+            j.required_education,
+            j.required_experience,
+            j.work_location,
+            j.salary_min,
+            j.salary_max,
+            j.salary_type,
+            j.job_type,
+            j.recruit_count,
+            j.view_count,
+            j.apply_count,
+            j.publish_time,
+            j.expire_time,
+            j.create_time,
+            CASE WHEN jf.id IS NOT NULL THEN 1 ELSE 0 END AS is_favorite,
+            CASE WHEN ja.id IS NOT NULL THEN 1 ELSE 0 END AS is_applied
+        FROM job j
+        LEFT JOIN enterprise e ON j.enterprise_id = e.id
+        LEFT JOIN job_category jc ON j.category_id = jc.id
+        LEFT JOIN job_favorite jf ON j.id = jf.job_id 
+            <if test="studentId != null">
+                AND jf.student_id = #{studentId}
+            </if>
+        LEFT JOIN job_application ja ON j.id = ja.job_id 
+            <if test="studentId != null">
+                AND ja.student_id = #{studentId}
+            </if>
+        WHERE j.id = #{jobId}
+            AND j.status = 1
+            AND (j.expire_time IS NULL OR j.expire_time &gt; NOW())
+    </select>
+
+    <select id="selectRecommendedJobs" resultMap="JobListVOResultMap">
+        SELECT
+            j.id,
+            j.enterprise_id,
+            e.enterprise_name,
+            j.job_name,
+            j.work_location,
+            j.salary_min,
+            j.salary_max,
+            j.salary_type,
+            j.job_type,
+            j.recruit_count,
+            j.view_count,
+            j.apply_count,
+            j.publish_time,
+            j.create_time,
+            CASE WHEN jf.id IS NOT NULL THEN 1 ELSE 0 END AS is_favorite,
+            ROUND(
+                LEAST(100,
+                    (CASE 
+                        WHEN s.major IS NOT NULL 
+                             AND j.required_major IS NOT NULL 
+                             AND j.required_major LIKE CONCAT('%', s.major, '%') 
+                        THEN 35 ELSE 0 END)
+                    +
+                    (CASE 
+                        WHEN s.skills IS NOT NULL 
+                             AND j.required_skills IS NOT NULL 
+                             AND (
+                                j.required_skills LIKE CONCAT('%', s.skills, '%')
+                                OR s.skills LIKE CONCAT('%', j.required_skills, '%')
+                             )
+                        THEN 35 ELSE 0 END)
+                    +
+                    (CASE 
+                        WHEN s.expected_location IS NOT NULL 
+                             AND j.work_location LIKE CONCAT('%', s.expected_location, '%') 
+                        THEN 20 ELSE 0 END)
+                    +
+                    (CASE 
+                        WHEN j.publish_time >= DATE_SUB(NOW(), INTERVAL 14 DAY) 
+                        THEN 10 ELSE 0 END)
+                ), 0
+            ) AS match_score
+        FROM job j
+        LEFT JOIN enterprise e ON j.enterprise_id = e.id
+        LEFT JOIN job_favorite jf ON j.id = jf.job_id AND jf.student_id = #{studentId}
+        LEFT JOIN student s ON s.id = #{studentId}
+        <where>
+            j.status = 1
+            AND (j.expire_time IS NULL OR j.expire_time &gt; NOW())
+        </where>
+        ORDER BY match_score DESC, j.publish_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectFavoriteJobList" resultMap="JobListVOResultMap">
+        SELECT
+            j.id,
+            j.enterprise_id,
+            e.enterprise_name,
+            j.job_name,
+            j.work_location,
+            j.salary_min,
+            j.salary_max,
+            j.salary_type,
+            j.job_type,
+            j.recruit_count,
+            j.view_count,
+            j.apply_count,
+            j.publish_time,
+            j.create_time,
+            1 AS is_favorite,
+            jf.create_time AS favorite_time
+        FROM job_favorite jf
+        INNER JOIN job j ON jf.job_id = j.id
+        LEFT JOIN enterprise e ON j.enterprise_id = e.id
+        <where>
+            jf.student_id = #{studentId}
+            AND j.status = 1
+            AND (j.expire_time IS NULL OR j.expire_time &gt; NOW())
+            <if test="dto.jobName != null and dto.jobName != ''">
+                AND j.job_name LIKE CONCAT('%', #{dto.jobName}, '%')
+            </if>
+            <if test="dto.categoryId != null">
+                AND j.category_id = #{dto.categoryId}
+            </if>
+            <if test="dto.workLocation != null and dto.workLocation != ''">
+                AND j.work_location LIKE CONCAT('%', #{dto.workLocation}, '%')
+            </if>
+            <if test="dto.jobType != null and dto.jobType != ''">
+                AND j.job_type = #{dto.jobType}
+            </if>
+            <if test="dto.requiredEducation != null and dto.requiredEducation != ''">
+                AND j.required_education = #{dto.requiredEducation}
+            </if>
+            <if test="dto.salaryMin != null">
+                AND (j.salary_max IS NULL OR j.salary_max &gt;= #{dto.salaryMin})
+            </if>
+            <if test="dto.salaryMax != null">
+                AND (j.salary_min IS NULL OR j.salary_min &lt;= #{dto.salaryMax})
+            </if>
+        </where>
+        <choose>
+            <when test="dto.sortField != null and dto.sortField != ''">
+                <choose>
+                    <when test="dto.sortField == 'publishTime'">
+                        ORDER BY j.publish_time
+                        <if test="dto.sortOrder == 'asc'">ASC</if>
+                        <if test="dto.sortOrder == 'desc' or dto.sortOrder == null">DESC</if>
+                    </when>
+                    <when test="dto.sortField == 'salary'">
+                        ORDER BY j.salary_max
+                        <if test="dto.sortOrder == 'asc'">ASC</if>
+                        <if test="dto.sortOrder == 'desc' or dto.sortOrder == null">DESC</if>
+                    </when>
+                    <when test="dto.sortField == 'viewCount'">
+                        ORDER BY j.view_count
+                        <if test="dto.sortOrder == 'asc'">ASC</if>
+                        <if test="dto.sortOrder == 'desc' or dto.sortOrder == null">DESC</if>
+                    </when>
+                    <otherwise>
+                        ORDER BY jf.create_time DESC
+                    </otherwise>
+                </choose>
+            </when>
+            <otherwise>
+                ORDER BY jf.create_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
+</mapper>
+

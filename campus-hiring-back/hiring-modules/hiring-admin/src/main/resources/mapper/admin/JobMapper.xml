@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.admin.mapper.JobMapper">
+
+    <resultMap id="JobListVOResultMap" type="cn.zc.admin.domain.vo.JobListVO">
+        <id property="id" column="id"/>
+        <result property="enterpriseId" column="enterprise_id"/>
+        <result property="enterpriseName" column="enterprise_name"/>
+        <result property="jobName" column="job_name"/>
+        <result property="workLocation" column="work_location"/>
+        <result property="salaryMin" column="salary_min"/>
+        <result property="salaryMax" column="salary_max"/>
+        <result property="salaryType" column="salary_type"/>
+        <result property="recruitCount" column="recruit_count"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="applyCount" column="apply_count"/>
+        <result property="status" column="status"/>
+        <result property="statusName" column="status_name"/>
+        <result property="publishTime" column="publish_time"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectJobList" resultMap="JobListVOResultMap">
+        SELECT
+            j.id,
+            j.enterprise_id,
+            e.enterprise_name,
+            j.job_name,
+            j.work_location,
+            j.salary_min,
+            j.salary_max,
+            j.salary_type,
+            j.recruit_count,
+            j.view_count,
+            j.apply_count,
+            j.status,
+            CASE j.status
+                WHEN 0 THEN '待审核'
+                WHEN 1 THEN '已通过'
+                WHEN 2 THEN '已拒绝'
+                WHEN 3 THEN '已下线'
+                ELSE '未知'
+            END AS status_name,
+            j.publish_time,
+            j.create_time
+        FROM job j
+        LEFT JOIN enterprise e ON j.enterprise_id = e.id
+        <where>
+            <if test="status != null">
+                AND j.status = #{status}
+            </if>
+            <if test="enterpriseId != null">
+                AND j.enterprise_id = #{enterpriseId}
+            </if>
+            <if test="jobName != null and jobName != ''">
+                AND j.job_name LIKE CONCAT('%', #{jobName}, '%')
+            </if>
+        </where>
+        ORDER BY j.create_time DESC
+    </select>
+
+    <resultMap id="JobDetailVOResultMap" type="cn.zc.admin.domain.vo.JobDetailVO">
+        <id property="id" column="id"/>
+        <result property="enterpriseId" column="enterprise_id"/>
+        <result property="enterpriseName" column="enterprise_name"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="jobName" column="job_name"/>
+        <result property="jobDescription" column="job_description"/>
+        <result property="requiredMajor" column="required_major"/>
+        <result property="requiredSkills" column="required_skills"/>
+        <result property="requiredEducation" column="required_education"/>
+        <result property="requiredExperience" column="required_experience"/>
+        <result property="workLocation" column="work_location"/>
+        <result property="salaryMin" column="salary_min"/>
+        <result property="salaryMax" column="salary_max"/>
+        <result property="salaryType" column="salary_type"/>
+        <result property="jobType" column="job_type"/>
+        <result property="recruitCount" column="recruit_count"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="applyCount" column="apply_count"/>
+        <result property="status" column="status"/>
+        <result property="statusName" column="status_name"/>
+        <result property="auditRemark" column="audit_remark"/>
+        <result property="auditTime" column="audit_time"/>
+        <result property="auditBy" column="audit_by"/>
+        <result property="publishTime" column="publish_time"/>
+        <result property="expireTime" column="expire_time"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectJobDetail" resultMap="JobDetailVOResultMap">
+        SELECT
+            j.id,
+            j.enterprise_id,
+            e.enterprise_name,
+            j.category_id,
+            jc.category_name,
+            j.job_name,
+            j.job_description,
+            j.required_major,
+            j.required_skills,
+            j.required_education,
+            j.required_experience,
+            j.work_location,
+            j.salary_min,
+            j.salary_max,
+            j.salary_type,
+            j.job_type,
+            j.recruit_count,
+            j.view_count,
+            j.apply_count,
+            j.status,
+            CASE j.status
+                WHEN 0 THEN '待审核'
+                WHEN 1 THEN '已通过'
+                WHEN 2 THEN '已拒绝'
+                WHEN 3 THEN '已下线'
+                ELSE '未知'
+            END AS status_name,
+            j.audit_remark,
+            j.audit_time,
+            j.audit_by,
+            j.publish_time,
+            j.expire_time,
+            j.create_time
+        FROM job j
+        LEFT JOIN enterprise e ON j.enterprise_id = e.id
+        LEFT JOIN job_category jc ON j.category_id = jc.id
+        WHERE j.id = #{jobId}
+    </select>
+
+</mapper>
+

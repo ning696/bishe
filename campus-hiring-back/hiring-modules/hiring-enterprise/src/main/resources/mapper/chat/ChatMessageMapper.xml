@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.enterprise.mapper.ChatMessageMapper">
+
+    <resultMap id="ChatMessageListVOResultMap" type="cn.zc.enterprise.domain.vo.ChatMessageListVO">
+        <id property="id" column="id"/>
+        <result property="sessionId" column="session_id"/>
+        <result property="senderId" column="sender_id"/>
+        <result property="senderName" column="sender_name"/>
+        <result property="senderAvatar" column="sender_avatar"/>
+        <result property="senderType" column="sender_type"/>
+        <result property="receiverId" column="receiver_id"/>
+        <result property="receiverName" column="receiver_name"/>
+        <result property="receiverAvatar" column="receiver_avatar"/>
+        <result property="receiverType" column="receiver_type"/>
+        <result property="messageType" column="message_type"/>
+        <result property="content" column="content"/>
+        <result property="relatedJobId" column="related_job_id"/>
+        <result property="isRead" column="is_read"/>
+        <result property="readTime" column="read_time"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectMessageList" resultMap="ChatMessageListVOResultMap">
+        SELECT
+            cm.id,
+            cm.session_id,
+            cm.sender_id,
+            CASE
+                WHEN cm.sender_type = 1 THEN s.nick_name
+                WHEN cm.sender_type = 2 THEN e.enterprise_name
+                ELSE ''
+            END AS sender_name,
+            CASE
+                WHEN cm.sender_type = 1 THEN s.head_image
+                WHEN cm.sender_type = 2 THEN e.logo
+                ELSE ''
+            END AS sender_avatar,
+            cm.sender_type,
+            cm.receiver_id,
+            CASE
+                WHEN cm.receiver_type = 1 THEN s2.nick_name
+                WHEN cm.receiver_type = 2 THEN e2.enterprise_name
+                ELSE ''
+            END AS receiver_name,
+            CASE
+                WHEN cm.receiver_type = 1 THEN s2.head_image
+                WHEN cm.receiver_type = 2 THEN e2.logo
+                ELSE ''
+            END AS receiver_avatar,
+            cm.receiver_type,
+            cm.message_type,
+            cm.content,
+            cm.related_job_id,
+            cm.is_read,
+            cm.read_time,
+            cm.create_time
+        FROM chat_message cm
+        LEFT JOIN student s ON cm.sender_type = 1 AND cm.sender_id = s.id
+        LEFT JOIN enterprise e ON cm.sender_type = 2 AND cm.sender_id = e.id
+        LEFT JOIN student s2 ON cm.receiver_type = 1 AND cm.receiver_id = s2.id
+        LEFT JOIN enterprise e2 ON cm.receiver_type = 2 AND cm.receiver_id = e2.id
+        WHERE cm.session_id = #{sessionId}
+        ORDER BY cm.create_time DESC
+    </select>
+
+    <update id="updateMessageRead">
+        UPDATE chat_message
+        SET is_read = 1,
+            read_time = NOW()
+        WHERE id IN
+        <foreach collection="messageIds" item="messageId" open="(" separator="," close=")">
+            #{messageId}
+        </foreach>
+        AND receiver_id = #{receiverId}
+        AND is_read = 0
+    </update>
+
+    <update id="updateSessionMessageRead">
+        UPDATE chat_message
+        SET is_read = 1,
+            read_time = NOW()
+        WHERE session_id = #{sessionId}
+        AND receiver_id = #{receiverId}
+        AND is_read = 0
+    </update>
+
+    <select id="selectUnreadCount" resultType="java.lang.Integer">
+        SELECT COALESCE(SUM(enterprise_unread_count), 0)
+        FROM chat_session
+        WHERE enterprise_id = #{enterpriseId}
+          AND status = 1
+    </select>
+
+</mapper>
+

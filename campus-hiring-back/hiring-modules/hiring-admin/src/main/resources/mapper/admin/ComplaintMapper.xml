@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.admin.mapper.ComplaintMapper">
+
+    <resultMap id="ComplaintListVOResultMap" type="cn.zc.admin.domain.vo.ComplaintListVO">
+        <id property="id" column="id"/>
+        <result property="complaintType" column="complaint_type"/>
+        <result property="complaintTypeName" column="complaint_type_name"/>
+        <result property="complainerId" column="complainer_id"/>
+        <result property="complainerName" column="complainer_name"/>
+        <result property="complainedId" column="complained_id"/>
+        <result property="complainedName" column="complained_name"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="handleStatus" column="handle_status"/>
+        <result property="handleStatusName" column="handle_status_name"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectComplaintList" resultMap="ComplaintListVOResultMap">
+        SELECT
+            c.id,
+            c.complaint_type,
+            CASE c.complaint_type
+                WHEN 1 THEN '学生投诉企业'
+                WHEN 2 THEN '企业投诉学生'
+                ELSE '未知'
+            END AS complaint_type_name,
+            c.complainer_id,
+            CASE c.complainer_type
+                WHEN 1 THEN s1.nick_name
+                WHEN 2 THEN e1.enterprise_name
+                ELSE '未知'
+            END AS complainer_name,
+            c.complained_id,
+            CASE c.complained_type
+                WHEN 1 THEN s2.nick_name
+                WHEN 2 THEN e2.enterprise_name
+                ELSE '未知'
+            END AS complained_name,
+            c.title,
+            c.content,
+            c.handle_status,
+            CASE c.handle_status
+                WHEN 0 THEN '待处理'
+                WHEN 1 THEN '处理中'
+                WHEN 2 THEN '已处理'
+                WHEN 3 THEN '已关闭'
+                ELSE '未知'
+            END AS handle_status_name,
+            c.create_time
+        FROM complaint c
+        LEFT JOIN student s1 ON c.complainer_type = 1 AND c.complainer_id = s1.id
+        LEFT JOIN enterprise e1 ON c.complainer_type = 2 AND c.complainer_id = e1.id
+        LEFT JOIN student s2 ON c.complained_type = 1 AND c.complained_id = s2.id
+        LEFT JOIN enterprise e2 ON c.complained_type = 2 AND c.complained_id = e2.id
+        <where>
+            <if test="handleStatus != null">
+                AND c.handle_status = #{handleStatus}
+            </if>
+            <if test="complaintType != null">
+                AND c.complaint_type = #{complaintType}
+            </if>
+        </where>
+        ORDER BY c.create_time DESC
+    </select>
+
+    <resultMap id="ComplaintDetailVOResultMap" type="cn.zc.admin.domain.vo.ComplaintDetailVO">
+        <id property="id" column="id"/>
+        <result property="complaintType" column="complaint_type"/>
+        <result property="complaintTypeName" column="complaint_type_name"/>
+        <result property="complainerId" column="complainer_id"/>
+        <result property="complainerName" column="complainer_name"/>
+        <result property="complainedId" column="complained_id"/>
+        <result property="complainedName" column="complained_name"/>
+        <result property="jobId" column="job_id"/>
+        <result property="jobName" column="job_name"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="attachment" column="attachment"/>
+        <result property="handleStatus" column="handle_status"/>
+        <result property="handleStatusName" column="handle_status_name"/>
+        <result property="handleResult" column="handle_result"/>
+        <result property="handleRemark" column="handle_remark"/>
+        <result property="handleTime" column="handle_time"/>
+        <result property="handleBy" column="handle_by"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectComplaintDetail" resultMap="ComplaintDetailVOResultMap">
+        SELECT
+            c.id,
+            c.complaint_type,
+            CASE c.complaint_type
+                WHEN 1 THEN '学生投诉企业'
+                WHEN 2 THEN '企业投诉学生'
+                ELSE '未知'
+            END AS complaint_type_name,
+            c.complainer_id,
+            CASE c.complainer_type
+                WHEN 1 THEN s1.nick_name
+                WHEN 2 THEN e1.enterprise_name
+                ELSE '未知'
+            END AS complainer_name,
+            c.complained_id,
+            CASE c.complained_type
+                WHEN 1 THEN s2.nick_name
+                WHEN 2 THEN e2.enterprise_name
+                ELSE '未知'
+            END AS complained_name,
+            c.job_id,
+            j.job_name,
+            c.title,
+            c.content,
+            c.attachment,
+            c.handle_status,
+            CASE c.handle_status
+                WHEN 0 THEN '待处理'
+                WHEN 1 THEN '处理中'
+                WHEN 2 THEN '已处理'
+                WHEN 3 THEN '已关闭'
+                ELSE '未知'
+            END AS handle_status_name,
+            c.handle_result,
+            c.handle_remark,
+            c.handle_time,
+            c.handle_by,
+            c.create_time
+        FROM complaint c
+        LEFT JOIN student s1 ON c.complainer_type = 1 AND c.complainer_id = s1.id
+        LEFT JOIN enterprise e1 ON c.complainer_type = 2 AND c.complainer_id = e1.id
+        LEFT JOIN student s2 ON c.complained_type = 1 AND c.complained_id = s2.id
+        LEFT JOIN enterprise e2 ON c.complained_type = 2 AND c.complained_id = e2.id
+        LEFT JOIN job j ON c.job_id = j.id
+        WHERE c.id = #{complaintId}
+    </select>
+
+</mapper>
+

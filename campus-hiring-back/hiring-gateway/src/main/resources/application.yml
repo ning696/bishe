@@ -1,0 +1,155 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: hiring-gateway
+  main:
+    web-application-type: reactive
+  cloud:
+    gateway:
+      routes:
+        # 管理员服务 Swagger UI 路由（必须放在通用路由之前，优先匹配）
+        - id: hiring-admin-swagger-ui
+          uri: http://localhost:8081
+          predicates:
+            - Path=/admin/swagger-ui/**
+          filters:
+            - RewritePath=/admin/swagger-ui/(?<segment>.*), /swagger-ui/$\{segment}
+            - AddRequestHeader=X-Forwarded-Prefix, /admin
+        # 管理员服务 Swagger UI 首页路由
+        - id: hiring-admin-swagger-ui-index
+          uri: http://localhost:8081
+          predicates:
+            - Path=/admin/swagger-ui.html
+          filters:
+            - RewritePath=/admin/swagger-ui.html, /swagger-ui.html
+            - AddRequestHeader=X-Forwarded-Prefix, /admin
+        # 管理员服务 API 文档路由
+        - id: hiring-admin-api-docs
+          uri: http://localhost:8081
+          predicates:
+            - Path=/admin/v3/api-docs/**
+          filters:
+            - RewritePath=/admin/v3/api-docs/(?<segment>.*), /v3/api-docs/$\{segment}
+            - AddRequestHeader=X-Forwarded-Prefix, /admin
+        # 管理员服务路由
+        - id: hiring-admin
+          uri: http://localhost:8081
+          predicates:
+            - Path=/admin/**
+        # 学生服务 Swagger UI 路由（必须放在通用路由之前，优先匹配）
+        - id: hiring-student-swagger-ui
+          uri: http://localhost:8082
+          predicates:
+            - Path=/student/swagger-ui/**
+          filters:
+            - RewritePath=/student/swagger-ui/(?<segment>.*), /swagger-ui/$\{segment}
+            - AddRequestHeader=X-Forwarded-Prefix, /student
+            - AddRequestHeader=X-Forwarded-Host, localhost:8080
+            - AddRequestHeader=X-Forwarded-Proto, http
+        # 学生服务 Swagger UI 首页路由
+        - id: hiring-student-swagger-ui-index
+          uri: http://localhost:8082
+          predicates:
+            - Path=/student/swagger-ui.html
+          filters:
+            - RewritePath=/student/swagger-ui.html, /swagger-ui.html
+            - AddRequestHeader=X-Forwarded-Prefix, /student
+            - AddRequestHeader=X-Forwarded-Host, localhost:8080
+            - AddRequestHeader=X-Forwarded-Proto, http
+        # 学生服务 API 文档路由
+        - id: hiring-student-api-docs
+          uri: http://localhost:8082
+          predicates:
+            - Path=/student/v3/api-docs/**
+          filters:
+            - RewritePath=/student/v3/api-docs/(?<segment>.*), /v3/api-docs/$\{segment}
+            - AddRequestHeader=X-Forwarded-Prefix, /student
+        # 学生服务路由
+        - id: hiring-student
+          uri: http://localhost:8082
+          predicates:
+            - Path=/student/**
+        # 企业服务 Swagger UI 路由（必须放在通用路由之前，优先匹配）
+        - id: hiring-enterprise-swagger-ui
+          uri: http://localhost:8083
+          predicates:
+            - Path=/enterprise/swagger-ui/**
+          filters:
+            - RewritePath=/enterprise/swagger-ui/(?<segment>.*), /swagger-ui/$\{segment}
+            - AddRequestHeader=X-Forwarded-Prefix, /enterprise
+        # 企业服务 Swagger UI 首页路由
+        - id: hiring-enterprise-swagger-ui-index
+          uri: http://localhost:8083
+          predicates:
+            - Path=/enterprise/swagger-ui.html
+          filters:
+            - RewritePath=/enterprise/swagger-ui.html, /swagger-ui.html
+            - AddRequestHeader=X-Forwarded-Prefix, /enterprise
+        # 企业服务 API 文档路由
+        - id: hiring-enterprise-api-docs
+          uri: http://localhost:8083
+          predicates:
+            - Path=/enterprise/v3/api-docs/**
+          filters:
+            - RewritePath=/enterprise/v3/api-docs/(?<segment>.*), /v3/api-docs/$\{segment}
+            - AddRequestHeader=X-Forwarded-Prefix, /enterprise
+        # 企业服务路由
+        - id: hiring-enterprise
+          uri: http://localhost:8083
+          predicates:
+            - Path=/enterprise/**
+      # 跨域配置
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+  # Redis 配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: Zc112325!
+      database: 0
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: -1ms
+          max-idle: 8
+          min-idle: 0
+
+# JWT 配置
+jwt:
+  secret: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
+  expiration: 86400000
+  header: Authorization
+  token-start: Bearer 
+
+# 网关白名单配置（不需要认证的路径）
+ignore:
+  whites:
+    - /admin/admin/login
+    - /admin/admin/register
+    - /student/student/login
+    - /student/student/register
+    - /student/student/sendCode
+    - /enterprise/enterprise/login
+    - /enterprise/enterprise/register
+    - /doc.html
+    - /swagger-ui/**
+    - /v3/api-docs/**
+    - /admin/swagger-ui/**
+    - /admin/swagger-ui.html
+    - /admin/v3/api-docs/**
+    - /student/swagger-ui/**
+    - /student/swagger-ui.html
+    - /student/v3/api-docs/**
+    - /enterprise/swagger-ui/**
+    - /enterprise/swagger-ui.html
+    - /enterprise/v3/api-docs/**
+

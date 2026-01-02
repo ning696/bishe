@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.student.mapper.ComplaintMapper">
+
+    <resultMap id="ComplaintListVOResultMap" type="cn.zc.student.domain.vo.ComplaintListVO">
+        <id property="id" column="id"/>
+        <result property="enterpriseId" column="enterprise_id"/>
+        <result property="enterpriseName" column="enterprise_name"/>
+        <result property="jobId" column="job_id"/>
+        <result property="jobName" column="job_name"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="attachment" column="attachment"/>
+        <result property="handleResult" column="handle_result"/>
+        <result property="handleRemark" column="handle_remark"/>
+        <result property="handleTime" column="handle_time"/>
+        <result property="handleStatus" column="handle_status"/>
+        <result property="handleStatusName" column="handle_status_name"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectComplaintList" resultMap="ComplaintListVOResultMap">
+        SELECT
+            c.id,
+            c.complained_id AS enterprise_id,
+            e.enterprise_name,
+            c.job_id,
+            j.job_name,
+            c.title,
+            c.content,
+            c.attachment,
+            c.handle_result,
+            c.handle_remark,
+            c.handle_time,
+            c.handle_status,
+            CASE c.handle_status
+                WHEN 0 THEN '待处理'
+                WHEN 1 THEN '处理中'
+                WHEN 2 THEN '已处理'
+                WHEN 3 THEN '已关闭'
+                ELSE '未知'
+            END AS handle_status_name,
+            c.create_time
+        FROM complaint c
+        LEFT JOIN enterprise e ON c.complained_id = e.id
+        LEFT JOIN job j ON c.job_id = j.id
+        WHERE c.complainer_id = #{studentId}
+        AND c.complainer_type = 1
+        AND c.complained_type = 2
+        <if test="handleStatus != null">
+            AND c.handle_status = #{handleStatus}
+        </if>
+        ORDER BY c.create_time DESC
+    </select>
+
+    <select id="countEnterpriseById" resultType="int">
+        SELECT COUNT(1)
+        FROM enterprise
+        WHERE id = #{enterpriseId}
+    </select>
+
+    <select id="countJobByIdAndEnterprise" resultType="int">
+        SELECT COUNT(1)
+        FROM job
+        WHERE id = #{jobId}
+        <if test="enterpriseId != null">
+            AND enterprise_id = #{enterpriseId}
+        </if>
+    </select>
+
+</mapper>
+

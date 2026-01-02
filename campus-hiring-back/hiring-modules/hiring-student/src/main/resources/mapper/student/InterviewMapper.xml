@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.student.mapper.InterviewMapper">
+
+    <resultMap id="InterviewListVOResultMap" type="cn.zc.student.domain.vo.InterviewListVO">
+        <id property="id" column="id"/>
+        <result property="jobId" column="job_id"/>
+        <result property="jobName" column="job_name"/>
+        <result property="enterpriseId" column="enterprise_id"/>
+        <result property="enterpriseName" column="enterprise_name"/>
+        <result property="interviewStatus" column="interview_status"/>
+        <result property="interviewStatusName" column="interview_status_name"/>
+        <result property="interviewTime" column="interview_time"/>
+        <result property="interviewLocation" column="interview_location"/>
+        <result property="interviewType" column="interview_type"/>
+        <result property="remark" column="remark"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectInterviewList" resultMap="InterviewListVOResultMap">
+        SELECT
+            i.id,
+            i.job_id,
+            j.job_name,
+            i.enterprise_id,
+            e.enterprise_name,
+            i.interview_status,
+            CASE i.interview_status
+                WHEN 0 THEN '待安排'
+                WHEN 1 THEN '已安排'
+                WHEN 2 THEN '已完成'
+                WHEN 3 THEN '已取消'
+                ELSE '未知'
+            END AS interview_status_name,
+            i.interview_time,
+            i.interview_location,
+            i.interview_type,
+            i.remark,
+            i.create_time
+        FROM interview i
+        LEFT JOIN job j ON i.job_id = j.id
+        LEFT JOIN enterprise e ON i.enterprise_id = e.id
+        WHERE i.student_id = #{studentId}
+        ORDER BY i.create_time DESC
+    </select>
+
+    <select id="selectInterviewPage" resultMap="InterviewListVOResultMap">
+        SELECT
+            i.id,
+            i.job_id,
+            j.job_name,
+            i.enterprise_id,
+            e.enterprise_name,
+            i.interview_status,
+            CASE i.interview_status
+                WHEN 0 THEN '待安排'
+                WHEN 1 THEN '已安排'
+                WHEN 2 THEN '已完成'
+                WHEN 3 THEN '已取消'
+                ELSE '未知'
+            END AS interview_status_name,
+            i.interview_time,
+            i.interview_location,
+            i.interview_type,
+            i.remark,
+            i.create_time
+        FROM interview i
+        LEFT JOIN job j ON i.job_id = j.id
+        LEFT JOIN enterprise e ON i.enterprise_id = e.id
+        WHERE i.student_id = #{studentId}
+        <if test="status != null">
+            AND i.interview_status = #{status}
+        </if>
+        ORDER BY i.create_time DESC
+    </select>
+
+    <resultMap id="InterviewDetailVOResultMap" type="cn.zc.student.domain.vo.InterviewDetailVO">
+        <id property="id" column="id"/>
+        <result property="jobId" column="job_id"/>
+        <result property="jobName" column="job_name"/>
+        <result property="enterpriseId" column="enterprise_id"/>
+        <result property="enterpriseName" column="enterprise_name"/>
+        <result property="interviewStatus" column="interview_status"/>
+        <result property="interviewStatusName" column="interview_status_name"/>
+        <result property="interviewTime" column="interview_time"/>
+        <result property="interviewLocation" column="interview_location"/>
+        <result property="interviewType" column="interview_type"/>
+        <result property="remark" column="remark"/>
+        <result property="contactPerson" column="contact_person"/>
+        <result property="contactPhone" column="contact_phone"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <select id="selectInterviewDetail" resultMap="InterviewDetailVOResultMap">
+        SELECT
+            i.id,
+            i.job_id,
+            j.job_name,
+            i.enterprise_id,
+            e.enterprise_name,
+            i.interview_status,
+            CASE i.interview_status
+                WHEN 0 THEN '待安排'
+                WHEN 1 THEN '已安排'
+                WHEN 2 THEN '已完成'
+                WHEN 3 THEN '已取消'
+                ELSE '未知'
+            END AS interview_status_name,
+            i.interview_time,
+            i.interview_location,
+            i.interview_type,
+            i.remark,
+            i.contact_person,
+            i.contact_phone,
+            i.create_time,
+            i.update_time
+        FROM interview i
+        LEFT JOIN job j ON i.job_id = j.id
+        LEFT JOIN enterprise e ON i.enterprise_id = e.id
+        WHERE i.id = #{interviewId}
+            AND i.student_id = #{studentId}
+    </select>
+
+</mapper>
+

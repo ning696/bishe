@@ -1,0 +1,111 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: hiring-enterprise
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/campus_hiring?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+    username: root
+    password: Zc112325!
+  # Redis 配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: Zc112325!
+      database: 0
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: -1ms
+          max-idle: 8
+          min-idle: 0
+  # RabbitMQ 配置
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin
+    virtual-host: /
+    listener:
+      simple:
+        acknowledge-mode: auto
+        retry:
+          enabled: true
+          initial-interval: 1000
+          max-attempts: 3
+          max-interval: 10000
+          multiplier: 1.0
+  # Feign 配置
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 5000
+            read-timeout: 5000
+
+# MyBatis Plus 配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  mapper-locations: classpath*:mapper/**/*Mapper.xml
+  type-aliases-package: cn.zc.enterprise.domain
+
+# PageHelper 配置
+pagehelper:
+  helper-dialect: mysql
+  reasonable: true
+  support-methods-arguments: true
+  params: count=countSql
+
+# JWT 配置
+jwt:
+  secret: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
+  expiration: 86400000
+  header: Authorization
+  token-start: Bearer 
+
+# MinIO 配置
+minio:
+  endpoint: http://localhost:10000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket-name: campus-hiring
+
+# Feign 服务地址配置（不使用注册中心，直接配置）
+feign:
+  client:
+    hiring-student:
+      url: http://localhost:8082
+
+# Swagger 配置
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    use-root-path: true
+    # 移除 config-url 和 urls，让 Swagger UI 自动发现 API 文档
+    # 这样既支持直接访问（http://localhost:8083/swagger-ui.html）
+    # 也支持通过网关访问（http://localhost:8080/enterprise/swagger-ui.html）
+    tags-sorter: alpha
+    operations-sorter: alpha
+  info:
+    title: 校园招聘系统-企业服务API
+    description: 校园招聘系统企业服务接口文档
+    version: 1.0.0
+

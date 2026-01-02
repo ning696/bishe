@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.0.1</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+
+    <groupId>cn.zc</groupId>
+    <artifactId>campus-hiring-back</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>campus-hiring-back</name>
+    <description>校园招聘系统后端</description>
+
+    <modules>
+        <module>hiring-gateway</module>
+        <module>hiring-modules</module>
+        <module>hiring-common</module>
+        <module>hiring-api</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>17</java.version>
+        <spring-boot.version>3.0.1</spring-boot.version>
+        <spring-cloud.version>2022.0.0</spring-cloud.version>
+        <mybatis-plus.version>3.5.9</mybatis-plus.version>
+        <swagger.version>2.2.0</swagger.version>
+        <jwt.version>0.9.1</jwt.version>
+        <io.jsonwebtoken.version>0.9.1</io.jsonwebtoken.version>
+        <io.jsonwebtoken.impl.version>0.11.5</io.jsonwebtoken.impl.version>
+        <cn.hutool.version>5.8.22</cn.hutool.version>
+        <hutool-all.version>5.8.22</hutool-all.version>
+        <pagehelper.boot.version>2.0.0</pagehelper.boot.version>
+        <io-minio-version>8.5.14</io-minio-version>
+        <javax-xml-bind.version>2.3.1</javax-xml-bind.version>
+        <javax-activation.version>1.1.1</javax-activation.version>
+        <org-glassfish-jaxb.version>2.3.3</org-glassfish-jaxb.version>
+        <javax.xml.bind.jaxb-api.version>2.4.0-b180830.0359</javax.xml.bind.jaxb-api.version>
+        <fastjson2.version>2.0.43</fastjson2.version>
+        <jaxb-api.version>2.4.0-b180830.0359</jaxb-api.version>
+        <hiring-common-core.version>0.0.1-SNAPSHOT</hiring-common-core.version>
+        <hiring-common-redis.version>0.0.1-SNAPSHOT</hiring-common-redis.version>
+        <hiring-common-mybatis.version>0.0.1-SNAPSHOT</hiring-common-mybatis.version>
+        <hiring-common-security.version>0.0.1-SNAPSHOT</hiring-common-security.version>
+        <hiring-common-swagger.version>0.0.1-SNAPSHOT</hiring-common-swagger.version>
+        <hiring-common-rabbitmq.version>0.0.1-SNAPSHOT</hiring-common-rabbitmq.version>
+        <hiring-common-minio.version>0.0.1-SNAPSHOT</hiring-common-minio.version>
+        <hiring-common-message.version>0.0.1-SNAPSHOT</hiring-common-message.version>
+        <hiring-api.version>0.0.1-SNAPSHOT</hiring-api.version>
+    </properties>
+
+    <dependencies>
+        <!-- bootstrap 启动器 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bootstrap</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- SpringCloud 微服务 -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- SpringBoot 依赖配置 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Hutool 工具类 -->
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool-all.version}</version>
+            </dependency>
+            <!-- MyBatis Plus -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+            <!-- JWT -->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt</artifactId>
+                <version>${jwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>${io.jsonwebtoken.impl.version}</version>
+            </dependency>
+            <!-- MinIO -->
+            <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>${io-minio-version}</version>
+            </dependency>
+            <!-- JAXB -->
+            <dependency>
+                <groupId>javax.xml.bind</groupId>
+                <artifactId>jaxb-api</artifactId>
+                <version>${javax-xml-bind.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.activation</groupId>
+                <artifactId>activation</artifactId>
+                <version>${javax-activation.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jaxb</groupId>
+                <artifactId>jaxb-runtime</artifactId>
+                <version>${org-glassfish-jaxb.version}</version>
+            </dependency>
+            <!-- Fastjson2 -->
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2.version}</version>
+            </dependency>
+            <!-- PageHelper -->
+            <dependency>
+                <groupId>com.github.pagehelper</groupId>
+                <artifactId>pagehelper-spring-boot-starter</artifactId>
+                <version>${pagehelper.boot.version}</version>
+            </dependency>
+            <!-- SpringDoc OpenAPI -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+            <!-- 内部模块依赖管理 -->
+            <dependency>
+                <groupId>cn.zc</groupId>
+                <artifactId>hiring-common-core</artifactId>
+                <version>${hiring-common-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.zc</groupId>
+                <artifactId>hiring-common-redis</artifactId>
+                <version>${hiring-common-redis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.zc</groupId>
+                <artifactId>hiring-common-mybatis</artifactId>
+                <version>${hiring-common-mybatis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.zc</groupId>
+                <artifactId>hiring-common-security</artifactId>
+                <version>${hiring-common-security.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.zc</groupId>
+                <artifactId>hiring-common-swagger</artifactId>
+                <version>${hiring-common-swagger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.zc</groupId>
+                <artifactId>hiring-common-rabbitmq</artifactId>
+                <version>${hiring-common-rabbitmq.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.zc</groupId>
+                <artifactId>hiring-common-minio</artifactId>
+                <version>${hiring-common-minio.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.zc</groupId>
+                <artifactId>hiring-common-message</artifactId>
+                <version>${hiring-common-message.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.zc</groupId>
+                <artifactId>hiring-api</artifactId>
+                <version>${hiring-api.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>

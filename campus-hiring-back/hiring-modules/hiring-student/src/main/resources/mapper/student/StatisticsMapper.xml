@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.student.mapper.StatisticsMapper">
+
+    <resultMap id="StatisticsOverviewVOResultMap" type="cn.zc.student.domain.vo.StatisticsOverviewVO">
+        <result property="totalApplications" column="total_applications"/>
+        <result property="pendingApplications" column="pending_applications"/>
+        <result property="passedApplications" column="passed_applications"/>
+        <result property="totalInterviews" column="total_interviews"/>
+        <result property="scheduledInterviews" column="scheduled_interviews"/>
+        <result property="completedInterviews" column="completed_interviews"/>
+        <result property="totalFavorites" column="total_favorites"/>
+        <result property="totalResumes" column="total_resumes"/>
+        <result property="defaultResumeId" column="default_resume_id"/>
+        <result property="resumeCompleteness" column="resume_completeness"/>
+        <result property="headImage" column="head_image"/>
+    </resultMap>
+
+    <select id="selectStatisticsOverview" resultMap="StatisticsOverviewVOResultMap">
+        SELECT
+            -- 投递数统计
+            COALESCE((SELECT COUNT(*) FROM job_application WHERE student_id = #{studentId}), 0) AS total_applications,
+            COALESCE((SELECT COUNT(*) FROM job_application WHERE student_id = #{studentId} AND application_status = 0), 0) AS pending_applications,
+            COALESCE((SELECT COUNT(*) FROM job_application WHERE student_id = #{studentId} AND application_status = 1), 0) AS passed_applications,
+            
+            -- 面试数统计
+            COALESCE((SELECT COUNT(*) FROM interview WHERE student_id = #{studentId}), 0) AS total_interviews,
+            COALESCE((SELECT COUNT(*) FROM interview WHERE student_id = #{studentId} AND interview_status = 1), 0) AS scheduled_interviews,
+            COALESCE((SELECT COUNT(*) FROM interview WHERE student_id = #{studentId} AND interview_status = 2), 0) AS completed_interviews,
+            
+            -- 收藏数统计
+            COALESCE((SELECT COUNT(*) FROM job_favorite WHERE student_id = #{studentId}), 0) AS total_favorites,
+            
+            -- 简历数统计和默认简历ID
+            COALESCE((SELECT COUNT(*) FROM resume WHERE student_id = #{studentId}), 0) AS total_resumes,
+            (SELECT id FROM resume WHERE student_id = #{studentId} AND is_default = 1 LIMIT 1) AS default_resume_id,
+            
+            -- 头像
+            (SELECT head_image FROM student WHERE id = #{studentId}) AS head_image,
+            
+            -- 简历完整度计算（必填字段：personalInfo, educationBackground, workExperience, skills, selfIntroduction）
+            CASE 
+                WHEN (SELECT COUNT(*) FROM resume WHERE student_id = #{studentId}) > 0 THEN
+                    ROUND(
+                        (SELECT AVG(
+                            CASE 
+                                WHEN personal_info IS NOT NULL AND personal_info != '' 
+                                    AND education_background IS NOT NULL AND education_background != ''
+                                    AND work_experience IS NOT NULL AND work_experience != ''
+                                    AND skills IS NOT NULL AND skills != ''
+                                    AND self_introduction IS NOT NULL AND self_introduction != ''
+                                THEN 100
+                                WHEN personal_info IS NOT NULL AND personal_info != '' 
+                                    AND education_background IS NOT NULL AND education_background != ''
+                                    AND work_experience IS NOT NULL AND work_experience != ''
+                                    AND skills IS NOT NULL AND skills != ''
+                                THEN 80
+                                WHEN personal_info IS NOT NULL AND personal_info != '' 
+                                    AND education_background IS NOT NULL AND education_background != ''
+                                    AND work_experience IS NOT NULL AND work_experience != ''
+                                THEN 60
+                                WHEN personal_info IS NOT NULL AND personal_info != '' 
+                                    AND education_background IS NOT NULL AND education_background != ''
+                                THEN 40
+                                WHEN personal_info IS NOT NULL AND personal_info != ''
+                                THEN 20
+                                ELSE 0
+                            END
+                        ) FROM resume WHERE student_id = #{studentId}), 0
+                    )
+                ELSE 0
+            END AS resume_completeness
+    </select>
+
+</mapper>
+

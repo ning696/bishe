@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.enterprise.mapper.CampusMapper">
+
+    <resultMap id="CampusListVOResultMap" type="cn.zc.enterprise.domain.vo.CampusListVO">
+        <id property="id" column="id"/>
+        <result property="campusName" column="campus_name"/>
+        <result property="campusCode" column="campus_code"/>
+        <result property="address" column="address"/>
+        <result property="contactPerson" column="contact_person"/>
+        <result property="contactPhone" column="contact_phone"/>
+        <result property="status" column="status"/>
+        <result property="statusName" column="status_name"/>
+    </resultMap>
+
+    <resultMap id="CampusJobVOResultMap" type="cn.zc.enterprise.domain.vo.CampusJobVO">
+        <id property="id" column="id"/>
+        <result property="campusId" column="campus_id"/>
+        <result property="campusName" column="campus_name"/>
+        <result property="jobId" column="job_id"/>
+        <result property="jobName" column="job_name"/>
+    </resultMap>
+
+    <select id="selectCampusList" resultMap="CampusListVOResultMap">
+        SELECT
+            c.id,
+            c.campus_name,
+            c.campus_code,
+            c.address,
+            c.contact_person,
+            c.contact_phone,
+            c.status,
+            CASE c.status
+                WHEN 0 THEN '禁用'
+                WHEN 1 THEN '启用'
+                ELSE '未知'
+            END AS status_name
+        FROM campus c
+        WHERE c.status = 1
+        <if test="campusName != null and campusName != ''">
+            AND c.campus_name LIKE CONCAT('%', #{campusName}, '%')
+        </if>
+        ORDER BY c.create_time DESC
+    </select>
+
+    <select id="selectCampusJobList" resultMap="CampusJobVOResultMap">
+        SELECT
+            cj.id,
+            cj.campus_id,
+            c.campus_name,
+            cj.job_id,
+            j.job_name
+        FROM campus_job cj
+        LEFT JOIN campus c ON cj.campus_id = c.id
+        LEFT JOIN job j ON cj.job_id = j.id
+        WHERE cj.job_id = #{jobId}
+        ORDER BY cj.create_time DESC
+    </select>
+
+</mapper>
+

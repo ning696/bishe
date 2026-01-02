@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.student.mapper.ResumeMapper">
+
+    <!-- ResumeMapper 继承 BaseMapper，基础 CRUD 操作由 MyBatis-Plus 自动提供 -->
+    <!-- 如需自定义查询，可在此添加 -->
+
+</mapper>
+

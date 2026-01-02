@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zc.admin.mapper.StudentMapper">
+
+    <resultMap id="StudentListVOResultMap" type="cn.zc.admin.domain.vo.StudentListVO">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="nickName" column="nick_name"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="status" column="status"/>
+        <result property="statusName" column="status_name"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectStudentList" resultMap="StudentListVOResultMap">
+        SELECT
+            id,
+            username,
+            nick_name,
+            phone,
+            email,
+            status,
+            CASE status
+                WHEN 0 THEN '已拉黑'
+                WHEN 1 THEN '正常'
+                WHEN 2 THEN '已禁用'
+                WHEN 3 THEN '待审核'
+                ELSE '未知'
+            END AS status_name,
+            create_time
+        FROM student
+        <where>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (username LIKE CONCAT('%', #{keyword}, '%')
+                OR nick_name LIKE CONCAT('%', #{keyword}, '%')
+                OR phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <resultMap id="StudentDetailVOResultMap" type="cn.zc.admin.domain.vo.StudentDetailVO">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="nickName" column="nick_name"/>
+        <result property="realName" column="real_name"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="headImage" column="head_image"/>
+        <result property="gender" column="gender"/>
+        <result property="birthday" column="birthday"/>
+        <result property="campusId" column="campus_id"/>
+        <result property="campusName" column="campus_name"/>
+        <result property="major" column="major"/>
+        <result property="education" column="education"/>
+        <result property="grade" column="grade"/>
+        <result property="skills" column="skills"/>
+        <result property="experience" column="experience"/>
+        <result property="expectedSalary" column="expected_salary"/>
+        <result property="expectedLocation" column="expected_location"/>
+        <result property="status" column="status"/>
+        <result property="statusName" column="status_name"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectStudentDetail" resultMap="StudentDetailVOResultMap">
+        SELECT
+            s.id,
+            s.username,
+            s.nick_name,
+            s.real_name,
+            s.phone,
+            s.email,
+            s.head_image,
+            s.gender,
+            s.birthday,
+            s.campus_id,
+            c.campus_name,
+            s.major,
+            s.education,
+            s.grade,
+            s.skills,
+            s.experience,
+            s.expected_salary,
+            s.expected_location,
+            s.status,
+            CASE s.status
+                WHEN 0 THEN '已拉黑'
+                WHEN 1 THEN '正常'
+                WHEN 2 THEN '已禁用'
+                WHEN 3 THEN '待审核'
+                ELSE '未知'
+            END AS status_name,
+            s.create_time
+        FROM student s
+        LEFT JOIN campus c ON s.campus_id = c.id
+        WHERE s.id = #{studentId}
+    </select>
+
+</mapper>
+
