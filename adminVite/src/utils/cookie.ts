@@ -1,9 +1,9 @@
 import Cookies from 'js-cookie'
 import type { UserInfo } from '@/store/modules/user'
 
-const TokenKey = 'Campus-Hiring-Student-Token'
-const RoleKey = 'Campus-Hiring-Student-Role'
-const UserInfoKey = 'Campus-Hiring-Student-UserInfo'
+const TokenKey = 'Campus-Hiring-Admin-Token'
+const RoleKey = 'Campus-Hiring-Admin-Role'
+const UserInfoKey = 'Campus-Hiring-Admin-UserInfo'
 
 /**
  * 获取 Token
