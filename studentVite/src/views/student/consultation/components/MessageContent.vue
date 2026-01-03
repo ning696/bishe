@@ -41,6 +41,19 @@
       </el-card>
     </div>
 
+    <!-- 职位消息 -->
+    <div v-else-if="message.messageType === 'job'" class="job-message">
+      <el-card shadow="hover" style="cursor: pointer;" @click="handleViewJob">
+        <div class="job-info">
+          <el-icon :size="24"><OfficeBuilding /></el-icon>
+          <div class="job-details">
+            <div class="job-name">{{ jobInfo.jobName || '职位信息' }}</div>
+            <div class="job-hint">点击查看职位详情</div>
+          </div>
+        </div>
+      </el-card>
+    </div>
+
     <!-- 未知消息类型 -->
     <div v-else class="unknown-message">
       未知消息类型
@@ -50,7 +63,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Document } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
+import { Document, OfficeBuilding } from '@element-plus/icons-vue'
 import type { MessageInfo } from '@/api/student/consultation'
 
 interface Props {
@@ -59,6 +73,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const router = useRouter()
 
 // 解析文件信息
 const fileInfo = computed(() => {
@@ -84,6 +99,18 @@ const resumeInfo = computed(() => {
   }
 })
 
+// 解析职位信息
+const jobInfo = computed(() => {
+  try {
+    return JSON.parse(props.message.content)
+  } catch {
+    return {
+      jobId: props.message.relatedJobId || props.message.content,
+      jobName: '职位信息'
+    }
+  }
+})
+
 // 文件大小格式化
 const fileSize = computed(() => {
   // 这里可以根据实际需求格式化文件大小
@@ -97,10 +124,28 @@ const handleDownload = () => {
 
 // 查看简历
 const handleViewResume = () => {
-  // TODO: 实现查看简历功能
-  console.log('查看简历:', resumeInfo.value)
+  const resumeId = resumeInfo.value.resumeId
+  if (!resumeId) {
+    console.error('简历ID不存在:', resumeInfo.value)
+    return
+  }
+  router.push({
+    path: `/student/resume/edit/${resumeId}`
+  })
 }
-</script>
+
+// 查看职位
+const handleViewJob = () => {
+  const jobId = jobInfo.value.jobId || props.message.relatedJobId
+  if (!jobId) {
+    console.error('职位ID不存在:', jobInfo.value)
+    return
+  }
+  router.push({
+    path: `/student/job/${jobId}`
+  })
+}
+  </script>
 
 <style scoped lang="scss">
 .message-content-wrapper {
@@ -120,27 +165,32 @@ const handleViewResume = () => {
 }
 
 .file-message,
-.resume-message {
+.resume-message,
+.job-message {
   .file-info,
-  .resume-info {
+  .resume-info,
+  .job-info {
     display: flex;
     align-items: center;
     gap: 12px;
   }
 
   .file-details,
-  .resume-details {
+  .resume-details,
+  .job-details {
     flex: 1;
   }
 
   .file-name,
-  .resume-name {
+  .resume-name,
+  .job-name {
     font-weight: 600;
     margin-bottom: 4px;
   }
 
   .file-size,
-  .resume-hint {
+  .resume-hint,
+  .job-hint {
     font-size: 12px;
     color: #999;
   }

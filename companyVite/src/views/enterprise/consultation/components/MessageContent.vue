@@ -58,14 +58,21 @@
     <div v-else class="unknown-message">
       未知消息类型
     </div>
+
+    <!-- 简历详情对话框 -->
+    <ResumeDetailDialog
+      v-model="resumeDetailVisible"
+      :resume-id="currentResumeId"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Document, Briefcase } from '@element-plus/icons-vue'
 import type { MessageInfo } from '@/api/enterprise/consultation'
+import ResumeDetailDialog from '@/views/enterprise/resume/components/ResumeDetailDialog.vue'
 
 interface Props {
   message: MessageInfo
@@ -74,6 +81,10 @@ interface Props {
 
 const props = defineProps<Props>()
 const router = useRouter()
+
+// 简历详情对话框状态
+const resumeDetailVisible = ref(false)
+const currentResumeId = ref<number | undefined>()
 
 // 解析文件信息
 const fileInfo = computed(() => {
@@ -127,16 +138,20 @@ const handleViewJob = () => {
   const jobId = jobInfo.value.jobId || props.message.relatedJobId
   if (jobId) {
     router.push({
-      path: '/enterprise/job/detail',
-      query: { id: jobId }
+      path: `/enterprise/job/${jobId}`
     })
   }
 }
 
 // 查看简历
 const handleViewResume = () => {
-  // TODO: 实现查看简历功能
-  console.log('查看简历:', resumeInfo.value)
+  const resumeId = resumeInfo.value.resumeId
+  if (!resumeId) {
+    console.error('简历ID不存在:', resumeInfo.value)
+    return
+  }
+  currentResumeId.value = resumeId
+  resumeDetailVisible.value = true
 }
 </script>
 
